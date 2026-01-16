@@ -1,5 +1,7 @@
 import Link from "next/link";
 import PresencePing from "@/app/components/PresencePing.client";
+// Añadimos esta importación para solucionar el error:
+import { User as UserProfileIcon } from "lucide-react";
 
 type HeaderUser = {
   email: string;
@@ -57,14 +59,14 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
 
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {/* Si querés mostrar el rol al lado del icono */}
               {user.roleLabel ? (
                 <span className="small" style={{ opacity: 0.7 }}>
                   {user.roleLabel}
                 </span>
               ) : null}
 
-              <UserProfileIcon />
+              {/* Ahora este componente sí funcionará porque está importado arriba */}
+              <UserProfileIcon size={20} />
             </div>
           ) : (
             <Link className="btn" href="/login">
