@@ -1,7 +1,6 @@
+// app/components/SiteHeader.tsx
 import Link from "next/link";
-import PresencePing from "@/app/components/PresencePing.client";
-// Esta línea soluciona el error 'UserProfileIcon' is not defined
-import { User as UserProfileIcon } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
 
 type HeaderUser = {
   email: string;
@@ -35,38 +34,50 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
         </Link>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Link
-            className="small"
-            href="/propiedades"
-            style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}
-          >
+          <Link className="small" href="/propiedades" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Propiedades
           </Link>
-          <Link
-            className="small"
-            href="/publicar"
-            style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}
-          >
+
+          <Link className="small" href="/publicar" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Publicar
           </Link>
-          <Link
-            className="small"
-            href="/admin"
-            style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}
-          >
+
+          <Link className="small" href="/admin" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Admin
           </Link>
 
           {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link
+              href="/perfil"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                textDecoration: "none",
+                color: "inherit",
+              }}
+              title="Ir a mi perfil"
+            >
               {user.roleLabel ? (
                 <span className="small" style={{ opacity: 0.7 }}>
                   {user.roleLabel}
                 </span>
               ) : null}
 
-              <UserProfileIcon size={20} />
-            </div>
+              <span
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 999,
+                  border: "1px solid #eee",
+                  display: "grid",
+                  placeItems: "center",
+                  background: "#fff",
+                }}
+              >
+                <UserIcon size={18} />
+              </span>
+            </Link>
           ) : (
             <Link className="btn" href="/login">
               Ingresar
