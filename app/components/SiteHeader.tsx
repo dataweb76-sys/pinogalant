@@ -1,4 +1,5 @@
 import Link from "next/link";
+import UserProfileIcon from "@/app/components/UserProfileIcon.client";
 
 type HeaderUser = {
   email: string;
@@ -32,25 +33,13 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
         </Link>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Link
-            className="small"
-            href="/propiedades"
-            style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}
-          >
+          <Link className="small" href="/propiedades" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Propiedades
           </Link>
-          <Link
-            className="small"
-            href="/publicar"
-            style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}
-          >
+          <Link className="small" href="/publicar" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Publicar
           </Link>
-          <Link
-            className="small"
-            href="/admin"
-            style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}
-          >
+          <Link className="small" href="/admin" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Admin
           </Link>
 
@@ -61,8 +50,9 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
                   {user.roleLabel}
                 </span>
               ) : null}
-              {/* Usamos un emoji temporal para asegurar que compile sin errores de importación */}
-              <span style={{ fontSize: "20px" }}>👤</span>
+
+              {/* Tu componente real (no lucide) */}
+              <UserProfileIcon />
             </div>
           ) : (
             <Link className="btn" href="/login">
