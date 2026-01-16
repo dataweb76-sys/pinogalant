@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PresencePing from "@/app/components/PresencePing.client";
-// Añadimos esta importación para solucionar el error:
+// Esta línea soluciona el error 'UserProfileIcon' is not defined
 import { User as UserProfileIcon } from "lucide-react";
 
 type HeaderUser = {
@@ -65,7 +65,6 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
                 </span>
               ) : null}
 
-              {/* Ahora este componente sí funcionará porque está importado arriba */}
               <UserProfileIcon size={20} />
             </div>
           ) : (
