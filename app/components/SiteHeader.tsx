@@ -1,3 +1,4 @@
+// app/components/SiteHeader.tsx
 import Link from "next/link";
 import UserProfileIcon from "@/app/components/UserProfileIcon.client";
 
@@ -36,9 +37,11 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           <Link className="small" href="/propiedades" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Propiedades
           </Link>
+
           <Link className="small" href="/publicar" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Publicar
           </Link>
+
           <Link className="small" href="/admin" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
             Admin
           </Link>
@@ -51,7 +54,6 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
                 </span>
               ) : null}
 
-              {/* Tu componente real (no lucide) */}
               <UserProfileIcon />
             </div>
           ) : (
