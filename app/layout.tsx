@@ -1,7 +1,9 @@
 import "./globals.css";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+// IMPORTANTE: Esta línea es la que faltaba y causaba el error
+import { createSupabaseServerClient } from "@/lib/supabase/server"; 
 import PresencePing from "@/app/components/PresencePing.client";
 import SiteHeader from "@/app/components/SiteHeader";
+import AgentsOnlineWidget from "@/app/components/AgentsOnlineWidget.client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,14 +11,10 @@ export const revalidate = 0;
 
 function roleToEs(role?: string | null) {
   switch (role) {
-    case "super_admin":
-      return "Superadmin";
-    case "admin":
-      return "Administración";
-    case "owner":
-      return "Propietario";
-    default:
-      return "Usuario";
+    case "super_admin": return "Superadmin";
+    case "admin": return "Administración";
+    case "owner": return "Propietario";
+    default: return "Usuario";
   }
 }
 
@@ -28,9 +26,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let headerUser: { email: string; roleLabel?: string | null } | null = null;
 
   if (user?.email) {
-    // OJO: esto usa el mismo server client con cookies (no service_role)
-    // Si RLS te bloquea profiles, igual no rompe: roleLabel queda null.
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
 
     headerUser = {
       email: user.email,
@@ -42,8 +42,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es">
       <body>
         <SiteHeader user={headerUser} />
-        {user ? <PresencePing /> : null}
+        {/* Esto hace que cada navegador (Chrome, Edge) avise que está online */}
+        {user && <PresencePing user={user} />}
         {children}
+        {/* Esto muestra la lista de todos los que avisaron */}
+        <AgentsOnlineWidget />
       </body>
     </html>
   );

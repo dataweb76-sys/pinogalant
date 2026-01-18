@@ -1,3 +1,4 @@
+// app/logout/page.tsx
 import Link from "next/link";
 import { signOutAction } from "@/app/auth/actions";
 

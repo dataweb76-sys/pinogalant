@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+// Añade esto arriba de todo, justo después de los imports
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Opcional: asegura que no haya caché de datos
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
