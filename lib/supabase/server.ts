@@ -1,7 +1,6 @@
 // lib/supabase/server.ts
 import { cookies } from "next/headers";
-// 1. Renombramos el import original para que no choque
-import { createServerClient as supabaseCreateServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 
 function getEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -13,18 +12,20 @@ function getEnv() {
 
 /**
  * Server Components: SOLO lectura de cookies.
+ * NO intentes cookieStore.set acá (Next lo prohíbe).
  */
 export async function createSupabaseServerClient() {
   const { url, anon } = getEnv();
   const cookieStore = cookies();
 
-  // 2. Usamos el nombre nuevo aquí
-  return supabaseCreateServerClient(url, anon, {
+  return createServerClient(url, anon, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll() {},
+      setAll() {
+        // NOOP en Server Components
+      },
     },
   });
 }
@@ -36,8 +37,7 @@ export async function createSupabaseActionClient() {
   const { url, anon } = getEnv();
   const cookieStore = cookies();
 
-  // 2. Y aquí también
-  return supabaseCreateServerClient(url, anon, {
+  return createServerClient(url, anon, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -50,10 +50,3 @@ export async function createSupabaseActionClient() {
     },
   });
 }
-
-/**
- * Alias de compatibilidad:
- * Ahora sí puedes exportar createServerClient sin errores.
- */
-export const createServerClientCompat = createSupabaseServerClient;
-export const createServerClient = createSupabaseServerClient;

@@ -1,4 +1,3 @@
-// app/components/PresencePing.client.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -22,7 +21,7 @@ export default function PresencePing() {
     const t = setInterval(() => {
       if (!alive) return;
       ping();
-    }, 25_000);
+    }, 15000);
 
     return () => {
       alive = false;

@@ -38,27 +38,42 @@ export default async function PerfilPage({
     );
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileErr } = await supabase
     .from("profiles")
     .select("role, full_name, phone, whatsapp, address, avatar_url, agent_code")
     .eq("id", user.id)
     .maybeSingle();
 
-  const roleLabel = roleToEs(profile?.role ?? null);
+  const role = (profile as any)?.role ?? null;
+  const roleLabel = roleToEs(role);
+  const isStaff = role === "admin" || role === "super_admin";
 
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: 24, display: "grid", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
         <h1 style={{ margin: 0 }}>Mi perfil</h1>
         <div style={{ display: "flex", gap: 10 }}>
-          <Link className="btn" href="/admin">
-            Volver al admin
-          </Link>
+          {isStaff ? (
+            <Link className="btn" href="/admin">
+              Volver al admin
+            </Link>
+          ) : (
+            <Link className="btn" href="/">
+              Volver a inicio
+            </Link>
+          )}
+
           <Link className="btn" href="/logout">
             Cerrar sesión
           </Link>
         </div>
       </div>
+
+      {profileErr ? (
+        <div className="card" style={{ border: "1px solid #fecaca", background: "#fff1f2", color: "#b91c1c", padding: 12 }}>
+          ❌ Error leyendo perfil: {profileErr.message}
+        </div>
+      ) : null}
 
       {searchParams?.ok ? (
         <div className="card" style={{ border: "1px solid #d1fae5", background: "#ecfdf5", padding: 12 }}>
@@ -67,10 +82,7 @@ export default async function PerfilPage({
       ) : null}
 
       {searchParams?.error ? (
-        <div
-          className="card"
-          style={{ border: "1px solid #fecaca", background: "#fff1f2", color: "#b91c1c", padding: 12 }}
-        >
+        <div className="card" style={{ border: "1px solid #fecaca", background: "#fff1f2", color: "#b91c1c", padding: 12 }}>
           ❌ {searchParams.error}
         </div>
       ) : null}
@@ -105,9 +117,7 @@ export default async function PerfilPage({
               {roleLabel}
               {profile?.agent_code ? ` · ID Agente: ${profile.agent_code}` : ""}
             </div>
-            <div className="small" style={{ opacity: 0.7 }}>
-              {user.email}
-            </div>
+            <div className="small" style={{ opacity: 0.7 }}>{user.email}</div>
           </div>
         </div>
       </div>
@@ -147,7 +157,6 @@ export default async function PerfilPage({
         </button>
       </form>
 
-      {/* NUEVO: cambiar contraseña */}
       <form action={changePasswordAction} className="card" style={{ display: "grid", gap: 12, padding: 16 }}>
         <div style={{ fontWeight: 900 }}>Cambiar contraseña</div>
 

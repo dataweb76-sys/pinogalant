@@ -13,13 +13,14 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
         position: "sticky",
         top: 0,
         zIndex: 40,
-        background: "white",
+        background: "rgba(255,255,255,.92)",
+        backdropFilter: "blur(10px)",
         borderBottom: "1px solid #eee",
       }}
     >
       <div
         style={{
-          maxWidth: 1100,
+          maxWidth: 1180,
           margin: "0 auto",
           padding: "12px 16px",
           display: "flex",
@@ -28,78 +29,78 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           gap: 12,
         }}
       >
-        {/* LOGO + BRAND */}
         <Link
           href="/"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
+            fontWeight: 950,
+            letterSpacing: -0.4,
             textDecoration: "none",
             color: "inherit",
-            minWidth: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="Pino Galant"
+          <span
             style={{
               width: 34,
               height: 34,
-              borderRadius: 10,
-              objectFit: "cover",
-              border: "1px solid #eee",
+              borderRadius: 12,
+              background: "#111",
+              color: "#fff",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 14,
+              fontWeight: 900,
             }}
-          />
-          <div style={{ lineHeight: 1.05, minWidth: 0 }}>
-            <div style={{ fontWeight: 900, letterSpacing: -0.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              Pino Galant
-            </div>
-            <div className="small" style={{ opacity: 0.65 }}>
-              Servicios inmobiliarios
-            </div>
-          </div>
+          >
+            PG
+          </span>
+          <span>Pino Galant</span>
         </Link>
 
-        <nav style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Link className="small" href="/propiedades" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <Link className="small" href="/propiedades" style={navLink}>
             Propiedades
           </Link>
-          <Link className="small" href="/publicar" style={{ textDecoration: "none", color: "inherit", opacity: 0.75 }}>
+          <Link className="small" href="/publicar" style={navLink}>
             Publicar
+          </Link>
+          <Link className="small" href="/admin" style={navLink}>
+            Admin
           </Link>
 
           {user ? (
             <Link
               className="btn"
-              href="/admin"
+              href="/perfil"
+              title="Mi perfil"
               style={{
+                padding: "10px 12px",
+                borderRadius: 12,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
-                textDecoration: "none",
+                gap: 10,
               }}
-              title={user.roleLabel || "Staff"}
             >
-              <span className="small" style={{ opacity: 0.7 }}>
-                {user.roleLabel || "Staff"}
+              <span className="small" style={{ opacity: 0.75 }}>
+                {user.roleLabel ?? "Usuario"}
               </span>
+
               <span
-                aria-hidden
                 style={{
-                  width: 22,
-                  height: 22,
+                  width: 30,
+                  height: 30,
                   borderRadius: 999,
-                  display: "grid",
-                  placeItems: "center",
                   background: "#111",
                   color: "#fff",
-                  fontSize: 12,
+                  display: "grid",
+                  placeItems: "center",
                   fontWeight: 900,
+                  fontSize: 12,
                 }}
               >
-                {String(user.email?.[0] || "S").toUpperCase()}
+                {(user.email?.[0] || "U").toUpperCase()}
               </span>
             </Link>
           ) : (
@@ -112,3 +113,9 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
     </header>
   );
 }
+
+const navLink: React.CSSProperties = {
+  textDecoration: "none",
+  color: "inherit",
+  opacity: 0.8,
+};
