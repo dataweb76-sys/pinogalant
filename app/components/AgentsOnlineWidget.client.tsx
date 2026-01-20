@@ -15,8 +15,8 @@ type Row = {
 
 function roleToEs(role?: string | null) {
   if (role === "super_admin") return "Superadmin";
-  if (role === "admin") return "Asesor";
-  return "Usuario";
+  if (role === "admin") return "Admin";
+  return "Agente";
 }
 
 function cleanPhone(raw?: string | null) {
@@ -35,7 +35,7 @@ function initials(name: string) {
 export default function AgentsOnlineWidget() {
   const [list, setList] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
 
   const offlineWhatsapp = (process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP || "").trim();
   const offlineEmail = (process.env.NEXT_PUBLIC_OFFLINE_EMAIL || "").trim();
@@ -59,106 +59,176 @@ export default function AgentsOnlineWidget() {
     return () => clearInterval(t);
   }, []);
 
-  const hasOnline = list.length > 0;
+  const onlineCount = list.length;
+  const hasOnline = onlineCount > 0;
 
-  const headline = useMemo(() => {
+  const chipText = useMemo(() => {
     if (loading) return "Conectando…";
-    return hasOnline ? "Asesores online" : "Sin asesores online";
-  }, [loading, hasOnline]);
+    return hasOnline ? `Chat (${onlineCount} online)` : "Chat (offline)";
+  }, [loading, hasOnline, onlineCount]);
 
-  const sub = useMemo(() => {
+  const subtitle = useMemo(() => {
     if (loading) return "Verificando disponibilidad…";
-    return hasOnline
-      ? "Respondemos ahora mismo por WhatsApp o Email."
-      : "Dejanos tu consulta y respondemos apenas estemos disponibles.";
+    return hasOnline ? "Atención en tiempo real" : "Dejanos tu consulta";
   }, [loading, hasOnline]);
 
-  const statusColor = hasOnline ? "#10b981" : "#9ca3af";
-  const statusBg = hasOnline ? "rgba(10,185,129,.10)" : "#f3f4f6";
+  // Cerrar modal con Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenModal(false);
+    }
+    if (openModal) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openModal]);
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        right: 2,
-        bottom: 2,
-        width: 350,
-        maxWidth: "calc(100vw - 32px)",
-        zIndex: 60,
-      }}
-    >
+    <>
+      {/* FLOATING CHAT BUTTON */}
       <div
-        className="card"
         style={{
-          borderRadius: 18,
-          overflow: "hidden",
-          boxShadow: "0 18px 50px rgba(0,0,0,.16)",
-          border: "1px solid #eee",
-          background: "white",
+          position: "fixed",
+          right: 18,
+          bottom: 18,
+          zIndex: 70,
+          display: "grid",
+          gap: 10,
+          justifyItems: "end",
         }}
       >
-        {/* HEADER */}
-        <div
+        <button
+          className="btn btnPrimary"
+          type="button"
+          onClick={() => setOpenModal(true)}
           style={{
-            padding: 14,
+            borderRadius: 999,
+            padding: "12px 14px",
+            boxShadow: "0 18px 50px rgba(0,0,0,.18)",
             display: "flex",
             alignItems: "center",
             gap: 10,
-            background: statusBg,
-            borderBottom: "1px solid #eee",
+            maxWidth: "calc(100vw - 36px)",
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 12,
+              display: "grid",
+              placeItems: "center",
+              background: "rgba(255,255,255,0.18)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              overflow: "hidden",
+            }}
+            title="Pino Galant"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" style={{ width: 34, height: 34, objectFit: "cover" }} />
+          </span>
+
+          <div style={{ display: "grid", lineHeight: 1.1 }}>
+            <span style={{ fontWeight: 900 }}>{chipText}</span>
+            <span className="small" style={{ opacity: 0.85 }}>
+              {subtitle}
+            </span>
+          </div>
+
+          <span
+            aria-hidden
+            style={{
+              marginLeft: 6,
+              width: 10,
+              height: 10,
+              borderRadius: 999,
+              background: loading ? "#9ca3af" : hasOnline ? "#22c55e" : "#ef4444",
+              boxShadow: "0 0 0 4px rgba(255,255,255,0.14)",
+            }}
+            title={loading ? "Cargando" : hasOnline ? "Online" : "Offline"}
+          />
+        </button>
+      </div>
+
+      {/* MODAL / POPUP */}
+      {!openModal ? null : (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setOpenModal(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 80,
+            background: "rgba(0,0,0,0.45)",
+            display: "grid",
+            placeItems: "end center",
+            padding: 14,
           }}
         >
           <div
+            className="card"
+            onClick={(e) => e.stopPropagation()}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 14,
-              display: "grid",
-              placeItems: "center",
-              fontWeight: 900,
-              background: statusColor,
-              color: "white",
-              flex: "0 0 auto",
-            }}
-            title={hasOnline ? "Online" : "Offline"}
-          >
-            {hasOnline ? "●" : "○"}
-          </div>
-
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 900, lineHeight: 1.15 }}>{headline}</div>
-            <div className="small" style={{ opacity: 0.78 }}>
-              {sub}
-            </div>
-          </div>
-
-          <button
-            className="btn"
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            style={{
-              marginLeft: "auto",
-              padding: "8px 10px",
-              borderRadius: 12,
-              height: 36,
+              width: "min(520px, 100%)",
+              borderRadius: 18,
+              overflow: "hidden",
+              background: "white",
+              border: "1px solid #eee",
+              boxShadow: "0 22px 80px rgba(0,0,0,.28)",
             }}
           >
-            {open ? "—" : "+"}
-          </button>
-        </div>
+            {/* HEADER */}
+            <div
+              style={{
+                padding: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                borderBottom: "1px solid #eee",
+                background: hasOnline ? "linear-gradient(90deg, #ecfdf5 0%, #ffffff 70%)" : "#fafafa",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="Pino Galant"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 14,
+                  objectFit: "cover",
+                  border: "1px solid #eee",
+                }}
+              />
 
-        {/* BODY */}
-        {!open ? null : (
-          <div style={{ padding: 14, display: "grid", gap: 12 }}>
-            {loading ? (
-              <div className="small" style={{ opacity: 0.7 }}>
-                Cargando…
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 900, lineHeight: 1.1 }}>
+                  {loading ? "Conectando…" : hasOnline ? `${onlineCount} agente(s) online` : "Ahora no hay agentes online"}
+                </div>
+                <div className="small" style={{ opacity: 0.75 }}>
+                  {loading
+                    ? "Estamos verificando disponibilidad."
+                    : hasOnline
+                    ? "Elegí con quién querés hablar."
+                    : "Podés escribir igual a la inmobiliaria."}
+                </div>
               </div>
-            ) : hasOnline ? (
-              <>
+
+              <button className="btn" type="button" onClick={() => setOpenModal(false)} style={{ marginLeft: "auto" }}>
+                Cerrar
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div style={{ padding: 14, display: "grid", gap: 12, maxHeight: "70vh", overflow: "auto" }}>
+              {loading ? (
+                <div className="small" style={{ opacity: 0.7 }}>
+                  Cargando…
+                </div>
+              ) : hasOnline ? (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {list.slice(0, 3).map((a) => {
-                    const name = a.full_name || a.email || "Asesor";
+                  {list.map((a) => {
+                    const name = a.full_name || a.email || "Agente";
                     const waDigits = cleanPhone(a.whatsapp);
                     const wa = waDigits ? `https://wa.me/${waDigits}` : null;
 
@@ -177,8 +247,8 @@ export default function AgentsOnlineWidget() {
                         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                           <div
                             style={{
-                              width: 46,
-                              height: 46,
+                              width: 44,
+                              height: 44,
                               borderRadius: 999,
                               overflow: "hidden",
                               background: "#111",
@@ -191,11 +261,7 @@ export default function AgentsOnlineWidget() {
                           >
                             {a.avatar_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={a.avatar_url}
-                                alt=""
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                              />
+                              <img src={a.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
                               initials(name)
                             )}
@@ -205,21 +271,21 @@ export default function AgentsOnlineWidget() {
                             <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {name}
                             </div>
-                            <div className="small" style={{ opacity: 0.72 }}>
-                              {roleToEs(a.role)} • <span style={{ color: "#10b981", fontWeight: 900 }}>🟢 Online</span>
+                            <div className="small" style={{ opacity: 0.7 }}>
+                              {roleToEs(a.role)} • <span style={{ color: "#10b981", fontWeight: 800 }}>🟢 Online</span>
                             </div>
                           </div>
                         </div>
 
                         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                           {wa ? (
-                            <a className="btn btnPrimary" href={wa} target="_blank" rel="noreferrer" style={{ flex: "1 1 auto" }}>
+                            <a className="btn btnPrimary" href={wa} target="_blank" rel="noreferrer">
                               💬 WhatsApp
                             </a>
                           ) : null}
 
                           {a.email ? (
-                            <a className="btn" href={`mailto:${a.email}`} style={{ flex: "1 1 auto" }}>
+                            <a className="btn" href={`mailto:${a.email}`}>
                               ✉️ Email
                             </a>
                           ) : null}
@@ -234,60 +300,47 @@ export default function AgentsOnlineWidget() {
                     );
                   })}
                 </div>
-
-                <div
-                  className="card"
-                  style={{
-                    padding: 12,
-                    borderRadius: 14,
-                    border: "1px dashed #e5e7eb",
-                    background: "#fafafa",
-                  }}
-                >
-                  <div style={{ fontWeight: 900 }}>¿Querés respuesta inmediata?</div>
-                  <div className="small" style={{ opacity: 0.75, marginTop: 4 }}>
-                    Escribinos por WhatsApp y te asesoramos ahora.
+              ) : (
+                <>
+                  <div className="small" style={{ opacity: 0.75 }}>
+                    Ahora no hay agentes conectados. Podés escribir igual y te respondemos apenas volvamos.
                   </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="small" style={{ opacity: 0.78 }}>
-                  Ahora no hay asesores conectados. Podés escribir igual y lo tomamos apenas volvamos.
-                </div>
 
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <a
-                    className="btn btnPrimary"
-                    href={offlineWhatsapp ? `https://wa.me/${cleanPhone(offlineWhatsapp)}` : "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      opacity: offlineWhatsapp ? 1 : 0.5,
-                      pointerEvents: offlineWhatsapp ? "auto" : "none",
-                      flex: "1 1 auto",
-                    }}
-                  >
-                    💬 WhatsApp Inmobiliaria
-                  </a>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <a
+                      className="btn btnPrimary"
+                      href={offlineWhatsapp ? `https://wa.me/${cleanPhone(offlineWhatsapp)}` : "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        opacity: offlineWhatsapp ? 1 : 0.5,
+                        pointerEvents: offlineWhatsapp ? "auto" : "none",
+                        flex: "1 1 auto",
+                        justifyContent: "center",
+                      }}
+                    >
+                      💬 WhatsApp inmobiliaria
+                    </a>
 
-                  <a
-                    className="btn"
-                    href={offlineEmail ? `mailto:${offlineEmail}` : "#"}
-                    style={{
-                      opacity: offlineEmail ? 1 : 0.5,
-                      pointerEvents: offlineEmail ? "auto" : "none",
-                      flex: "1 1 auto",
-                    }}
-                  >
-                    ✉️ Email
-                  </a>
-                </div>
-              </>
-            )}
+                    <a
+                      className="btn"
+                      href={offlineEmail ? `mailto:${offlineEmail}` : "#"}
+                      style={{
+                        opacity: offlineEmail ? 1 : 0.5,
+                        pointerEvents: offlineEmail ? "auto" : "none",
+                        flex: "1 1 auto",
+                        justifyContent: "center",
+                      }}
+                    >
+                      ✉️ Email
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

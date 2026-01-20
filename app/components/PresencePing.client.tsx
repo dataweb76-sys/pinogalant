@@ -1,4 +1,3 @@
-// app/components/PresencePing.client.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -9,15 +8,20 @@ export default function PresencePing() {
 
     async function ping() {
       try {
-        await fetch("/api/presence/ping", { method: "POST", cache: "no-store" });
-      } catch {}
+        await fetch("/api/presence/ping", {
+          method: "POST",
+          cache: "no-store",
+        });
+      } catch {
+        // silencioso
+      }
     }
 
     ping();
     const t = setInterval(() => {
       if (!alive) return;
       ping();
-    }, 20_000);
+    }, 15000);
 
     return () => {
       alive = false;
