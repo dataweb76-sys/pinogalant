@@ -31,7 +31,6 @@ export default async function CashPage() {
 
   const admin = createSupabaseAdminClient();
 
-  // Movimientos (últimos 30)
   const { data: rows, error } = await admin
     .from("cash_movements")
     .select("id,type,amount_ars,amount_usd,concept,notes,property_id,created_at")
@@ -40,175 +39,146 @@ export default async function CashPage() {
 
   const list = (rows as any as Movement[]) ?? [];
 
-  // Resumen simple
   const saldoARS = list.reduce((acc, m) => acc + (m.type === "income" ? 1 : -1) * n(m.amount_ars), 0);
   const saldoUSD = list.reduce((acc, m) => acc + (m.type === "income" ? 1 : -1) * n(m.amount_usd), 0);
 
   return (
-    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 90px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+    <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 100px", fontFamily: "sans-serif" }}>
+      
+      {/* HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
         <div>
-          <div className="small" style={{ opacity: 0.7 }}>
-            Gestión interna
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+            Tesorería
           </div>
-          <h1 style={{ margin: 0, letterSpacing: -0.6 }}>Gestión de Caja</h1>
-          <div className="small" style={{ opacity: 0.7, marginTop: 6 }}>
-            Registrá ingresos/egresos y controlá el saldo.
-          </div>
+          <h1 style={{ margin: 0, fontSize: "32px", fontWeight: 800, letterSpacing: "-0.03em", color: "#111" }}>Gestión de Caja</h1>
         </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <Link className="btn" href="/admin">
-            Volver
-          </Link>
-          <Link className="btn" href="/logout">
-            Cerrar sesión
+        <div style={{ display: "flex", gap: "12px" }}>
+          <Link href="/admin" style={{ textDecoration: "none", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, fontSize: "14px", border: "1px solid #e5e7eb", color: "#374151", background: "white" }}>
+            ← Volver al Panel
           </Link>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 12, marginTop: 18 }}>
-        <div className="card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900 }}>Alta rápida</div>
-
-          {/* Form simple (después lo conectamos con Server Action) */}
-          <div className="small" style={{ opacity: 0.7, marginTop: 8 }}>
-            (Ahora dejamos la UI lista. En el próximo paso lo conectamos para guardar.)
+      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "24px", alignItems: "start" }}>
+        
+        {/* COLUMNA IZQUIERDA: FORMULARIO */}
+        <div style={{ background: "white", padding: "32px", borderRadius: "16px", border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#111", color: "white", display: "grid", placeItems: "center", fontSize: "20px" }}>➕</div>
+            <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 700 }}>Nuevo Movimiento</h2>
           </div>
 
-          <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gap: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                  Tipo
-                </div>
-                <select className="input" defaultValue="income">
-                  <option value="income">Ingreso</option>
-                  <option value="expense">Egreso</option>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>Tipo de flujo</label>
+                <select style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "14px", outline: "none" }}>
+                  <option value="income">🟢 Ingreso de dinero</option>
+                  <option value="expense">🔴 Egreso / Pago</option>
                 </select>
               </div>
               <div>
-                <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                  Fecha/hora
-                </div>
-                <input className="input" placeholder="dd/mm/aaaa --:--" />
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>Fecha</label>
+                <input type="datetime-local" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "14px" }} />
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                  Monto ARS
-                </div>
-                <input className="input" placeholder="Ej: 150000" />
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>Monto ARS</label>
+                <input placeholder="0.00" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "14px" }} />
               </div>
               <div>
-                <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                  Monto USD
-                </div>
-                <input className="input" placeholder="Ej: 200" />
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>Monto USD</label>
+                <input placeholder="0.00" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "14px" }} />
               </div>
             </div>
 
             <div>
-              <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                Concepto (obligatorio)
-              </div>
-              <input className="input" placeholder="Ej: Alquiler enero / Honorarios / Reparación..." />
+              <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>Concepto</label>
+              <input placeholder="Ej: Cobro Alquiler Depto 2B" style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "14px" }} />
             </div>
 
-            <div>
-              <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                Notas / observaciones
-              </div>
-              <textarea className="input" placeholder="Opcional" style={{ minHeight: 90 }} />
-            </div>
-
-            <div>
-              <div className="small" style={{ opacity: 0.7, marginBottom: 6 }}>
-                Propiedad ID (opcional)
-              </div>
-              <input className="input" placeholder="UUID de la propiedad (si aplica)" />
-            </div>
-
-            <button className="btn btnPrimary" disabled>
-              Guardar movimiento
+            <button disabled style={{ width: "100%", padding: "14px", borderRadius: "10px", background: "#111", color: "white", fontWeight: 700, fontSize: "15px", border: "none", cursor: "not-allowed", marginTop: "10px", opacity: 0.7 }}>
+              Guardar Movimiento
             </button>
           </div>
         </div>
 
-        <div className="card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 900 }}>Resumen</div>
+        {/* COLUMNA DERECHA: RESUMEN */}
+        <div style={{ display: "grid", gap: "20px" }}>
+          <div style={{ background: "#111", padding: "32px", borderRadius: "16px", color: "white", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Saldo Disponible (ARS)</div>
+            <div style={{ fontSize: "36px", fontWeight: 800 }}>${saldoARS.toLocaleString("es-AR")}</div>
+          </div>
 
-          <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-            <div className="card" style={{ padding: 12 }}>
-              <div className="small" style={{ opacity: 0.7 }}>
-                Saldo (ARS)
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>${saldoARS.toLocaleString("es-AR")}</div>
-            </div>
+          <div style={{ background: "white", padding: "32px", borderRadius: "16px", border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>Saldo Disponible (USD)</div>
+            <div style={{ fontSize: "32px", fontWeight: 800, color: "#111" }}>USD {saldoUSD.toLocaleString("en-US")}</div>
+          </div>
 
-            <div className="card" style={{ padding: 12 }}>
-              <div className="small" style={{ opacity: 0.7 }}>
-                Saldo (USD)
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>USD {saldoUSD.toLocaleString("en-US")}</div>
+          <div style={{ background: "#fef3c7", padding: "20px", borderRadius: "16px", border: "1px solid #fde68a", color: "#92400e" }}>
+            <div style={{ fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>💡</span> Tip de Gestión
             </div>
-
-            <div className="small" style={{ opacity: 0.65 }}>
-              Tip: en el próximo paso lo vinculamos con propiedades desde un selector (sin UUID).
-            </div>
+            <p style={{ margin: "8px 0 0", fontSize: "13px", lineHeight: "1.5" }}>
+              Próximamente podrás vincular cada movimiento a una propiedad específica desde un buscador inteligente.
+            </p>
           </div>
         </div>
       </div>
 
-      <section style={{ marginTop: 18 }}>
-        <h2 style={{ margin: "16px 0 10px" }}>Movimientos recientes</h2>
-
-        {error ? (
-          <div className="small" style={{ color: "crimson" }}>
-            ❌ Error cargando movimientos: {error.message}
-          </div>
-        ) : list.length === 0 ? (
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ fontWeight: 800 }}>Todavía no hay movimientos</div>
-            <div className="small" style={{ opacity: 0.7 }}>
-              Cuando guardemos el alta rápida, van a aparecer acá.
+      {/* TABLA DE MOVIMIENTOS */}
+      <section style={{ marginTop: "48px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "20px", color: "#111" }}>Historial de Movimientos</h2>
+        
+        <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          {list.length === 0 ? (
+            <div style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>
+              No hay movimientos registrados recientemente.
             </div>
-          </div>
-        ) : (
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            <div style={{ display: "grid" }}>
-              {list.map((m) => (
-                <div
-                  key={m.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "120px 1fr 160px 160px",
-                    gap: 10,
-                    padding: "12px 14px",
-                    borderTop: "1px solid #eee",
-                    alignItems: "center",
-                  }}
-                >
-                  <div className="small" style={{ opacity: 0.7 }}>
-                    {new Date(m.created_at).toLocaleString("es-AR")}
-                  </div>
-                  <div style={{ fontWeight: 800 }}>
-                    {m.type === "income" ? "Ingreso" : "Egreso"} — {m.concept}
-                    {m.notes ? <div className="small" style={{ opacity: 0.7 }}>{m.notes}</div> : null}
-                  </div>
-                  <div style={{ textAlign: "right", fontWeight: 900 }}>
-                    {m.amount_ars != null ? `$${Number(m.amount_ars).toLocaleString("es-AR")}` : "—"}
-                  </div>
-                  <div style={{ textAlign: "right", fontWeight: 900 }}>
-                    {m.amount_usd != null ? `USD ${Number(m.amount_usd).toLocaleString("en-US")}` : "—"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead>
+                <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                  <th style={{ padding: "16px", fontSize: "13px", color: "#4b5563", fontWeight: 600 }}>Fecha</th>
+                  <th style={{ padding: "16px", fontSize: "13px", color: "#4b5563", fontWeight: 600 }}>Concepto</th>
+                  <th style={{ padding: "16px", fontSize: "13px", color: "#4b5563", fontWeight: 600, textAlign: "right" }}>ARS</th>
+                  <th style={{ padding: "16px", fontSize: "13px", color: "#4b5563", fontWeight: 600, textAlign: "right" }}>USD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((m) => (
+                  <tr key={m.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    <td style={{ padding: "16px", fontSize: "13px", color: "#6b7280" }}>
+                      {new Date(m.created_at).toLocaleDateString("es-AR")}
+                    </td>
+                    <td style={{ padding: "16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ 
+                          width: "8px", height: "8px", borderRadius: "50%", 
+                          background: m.type === "income" ? "#10b981" : "#ef4444" 
+                        }}></span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "14px", color: "#111" }}>{m.concept}</div>
+                          {m.notes && <div style={{ fontSize: "12px", color: "#9ca3af" }}>{m.notes}</div>}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "16px", textAlign: "right", fontWeight: 700, color: m.type === "income" ? "#10b981" : "#111" }}>
+                      {m.amount_ars ? `${m.type === "expense" ? "-" : ""}$${Number(m.amount_ars).toLocaleString("es-AR")}` : "—"}
+                    </td>
+                    <td style={{ padding: "16px", textAlign: "right", fontWeight: 700, color: m.type === "income" ? "#10b981" : "#111" }}>
+                      {m.amount_usd ? `${m.type === "expense" ? "-" : ""}u$d ${Number(m.amount_usd).toLocaleString("en-US")}` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </section>
     </main>
   );

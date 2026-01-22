@@ -1,31 +1,30 @@
-// app/api/presence/ping/route.ts
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseActionClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  try {
-    // quien soy (cookie session)
-    const supabase = await createSupabaseServerClient();
-    const { data } = await supabase.auth.getUser();
-    const user = data.user;
+  const supabase = await createSupabaseActionClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ ok: false }, { status: 200 });
-    }
+  if (!user) return NextResponse.json({ ok: false }, { status: 401 });
 
-    // actualizo perfil (service role, no depende de RLS)
-    const admin = createSupabaseAdminClient();
-    await admin
-      .from("profiles")
-      .update({ is_online: true, last_seen: new Date().toISOString() })
-      .eq("id", user.id);
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      is_online: true,
+      last_seen: new Date().toISOString(),
+    })
+    .eq("id", user.id);
 
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 200 });
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true });
 }

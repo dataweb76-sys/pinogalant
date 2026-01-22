@@ -23,20 +23,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { data } = await supabase.auth.getUser();
   const user = data.user ?? null;
 
-  let headerUser: { email: string; roleLabel?: string | null } | null = null;
+let headerUser: { email: string; role?: string | null; roleLabel?: string | null } | null = null;
 
-  if (user?.email) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+if (user?.email) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    headerUser = {
-      email: user.email,
-      roleLabel: roleToEs((profile as any)?.role ?? null),
-    };
-  }
+  headerUser = {
+    email: user.email,
+    role: profile?.role ?? null,
+    roleLabel: roleToEs(profile?.role ?? null),
+  };
+}
 
   return (
     <html lang="es">

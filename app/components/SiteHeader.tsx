@@ -1,12 +1,14 @@
-// app/components/SiteHeader.tsx
 import Link from "next/link";
 
 type HeaderUser = {
   email: string;
+  role?: string | null;
   roleLabel?: string | null;
 };
 
 export default function SiteHeader({ user }: { user: HeaderUser | null }) {
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+
   return (
     <header
       style={{
@@ -29,6 +31,7 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           gap: 12,
         }}
       >
+        {/* LOGO */}
         <Link
           href="/"
           style={{
@@ -59,17 +62,24 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           <span>Pino Galant</span>
         </Link>
 
-        <nav style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        {/* NAV */}
+        <nav style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link className="small" href="/propiedades" style={navLink}>
             Propiedades
           </Link>
+
           <Link className="small" href="/publicar" style={navLink}>
             Publicar
           </Link>
-          <Link className="small" href="/admin" style={navLink}>
-            Admin
-          </Link>
 
+          {/* 🔒 SOLO ADMIN / SUPERADMIN */}
+          {isAdmin && (
+            <Link className="small" href="/admin" style={navLink}>
+              Admin
+            </Link>
+          )}
+
+          {/* USUARIO */}
           {user ? (
             <Link
               className="btn"

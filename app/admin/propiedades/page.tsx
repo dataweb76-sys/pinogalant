@@ -2,7 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createPropertyAction, deletePropertyAction, togglePublishAction } from "./actions";
+import {
+  createPropertyAction,
+  deletePropertyAction,
+  togglePublishAction,
+} from "./actions";
 import RowActions from "./row-actions.client";
 
 export const runtime = "nodejs";
@@ -19,7 +23,7 @@ export default async function AdminPropertiesPage({
     city?: string;
     operation?: string;
     type?: string;
-    published?: string; // "all" | "1" | "0"
+    published?: string; // all | 1 | 0 | revision
   };
 }) {
   const supabase = await createSupabaseServerClient();
@@ -28,45 +32,82 @@ export default async function AdminPropertiesPage({
 
   const admin = createSupabaseAdminClient();
 
-  const me = await admin.from("profiles").select("id, role").eq("id", data.user.id).maybeSingle();
+  const me = await admin
+    .from("profiles")
+    .select("id, role")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
   const myRole = (me.data?.role as Role | undefined) ?? "owner";
-  if (myRole !== "admin" && myRole !== "super_admin") redirect("/admin?error=not_admin");
+  if (myRole !== "admin" && myRole !== "super_admin") {
+    redirect("/admin?error=not_admin");
+  }
 
   // ---------- Filtros ----------
   const q = (searchParams?.q ?? "").trim();
   const fCity = (searchParams?.city ?? "").trim();
   const fOperation = (searchParams?.operation ?? "").trim();
   const fType = (searchParams?.type ?? "").trim();
-  const fPublished = (searchParams?.published ?? "all").trim(); // all|1|0
+  const fPublished = (searchParams?.published ?? "all").trim(); // 👈 CLAVE
 
   // ---------- Query base ----------
   let query = admin
     .from("properties")
     .select(
-      "id,title,city,neighborhood,operation,type,purpose,property_type,price_ars,price_usd,is_published,agent_id,created_at"
+      "id,title,city,neighborhood,operation,type,purpose,property_type,price_ars,price_usd,is_published,status,agent_id,created_at"
     )
     .order("created_at", { ascending: false });
 
-  // admins ven solo las propias
-  if (myRole !== "super_admin") query = query.eq("agent_id", data.user.id);
+  /**
+   * 🔑 FILTRO POR AGENTE
+   * - Admin normal:
+   *   - Ve SUS propiedades
+   *   - EXCEPTO cuando está en “revisión”
+   * - Super admin: ve todo
+   */
+  if (myRole !== "super_admin" && fPublished !== "revision") {
+    query = query.eq("agent_id", data.user.id);
+  }
 
-  // filtros
+  // ---------- Filtros ----------
   if (q) query = query.ilike("title", `%${q}%`);
   if (fCity) query = query.ilike("city", `%${fCity}%`);
   if (fOperation) query = query.eq("operation", fOperation);
   if (fType) query = query.eq("type", fType);
-  if (fPublished === "1") query = query.eq("is_published", true);
-  if (fPublished === "0") query = query.eq("is_published", false);
+
+  /**
+   * 🔥 FILTRO DE PUBLICACIÓN (NO SE PISAN)
+   */
+  if (fPublished === "1") {
+    query = query.eq("is_published", true);
+  }
+
+  if (fPublished === "0") {
+    query = query.eq("is_published", false);
+  }
+
+  if (fPublished === "revision") {
+    query = query.eq("status", "en_revision");
+  }
+  // published === "all" → NO se filtra nada
 
   const propsRes = await query;
   const rows = propsRes.data ?? [];
 
-  // ---------- Operaciones y tipos disponibles (enum values) ----------
-  const opVals = await admin.rpc("enum_values", { enum_name: "property_operation" });
-  const typeVals = await admin.rpc("enum_values", { enum_name: "property_type" });
+  // ---------- Operaciones y tipos ----------
+  const opVals = await admin.rpc("enum_values", {
+    enum_name: "property_operation",
+  });
+  const typeVals = await admin.rpc("enum_values", {
+    enum_name: "property_type",
+  });
 
-  const operations: string[] = Array.isArray(opVals.data) ? (opVals.data as string[]) : [];
-  const types: string[] = Array.isArray(typeVals.data) ? (typeVals.data as string[]) : [];
+  const operations: string[] = Array.isArray(opVals.data)
+    ? (opVals.data as string[])
+    : [];
+  const types: string[] = Array.isArray(typeVals.data)
+    ? (typeVals.data as string[])
+    : [];
 
   // ---------- Foto principal ----------
   const ids = rows.map((r) => r.id);
@@ -83,19 +124,28 @@ export default async function AdminPropertiesPage({
 
     const media = mediaRes.data ?? [];
     for (const m of media) {
-      if (!mediaMap.has(m.property_id)) mediaMap.set(m.property_id, m.url);
+      if (!mediaMap.has(m.property_id)) {
+        mediaMap.set(m.property_id, m.url);
+      }
     }
   }
 
-  // ---------- Lista agentes (solo super_admin) ----------
+  // ---------- Agentes ----------
   const agentsRes =
     myRole === "super_admin"
-      ? await admin.from("profiles").select("id, role, full_name, email").order("created_at", { ascending: true })
+      ? await admin
+          .from("profiles")
+          .select("id, role, full_name, email")
+          .order("created_at", { ascending: true })
       : { data: [] as any[] };
 
   const agentLabel = new Map<string, string>();
   for (const a of agentsRes.data ?? []) {
-    const label = a.full_name ? a.full_name : a.email ? a.email : `${String(a.id).slice(0, 8)}...`;
+    const label = a.full_name
+      ? a.full_name
+      : a.email
+      ? a.email
+      : `${String(a.id).slice(0, 8)}...`;
     agentLabel.set(a.id, `${label} (${a.role})`);
   }
 
@@ -104,10 +154,19 @@ export default async function AdminPropertiesPage({
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <h1 style={{ margin: 0 }}>Propiedades</h1>
         <span className="small" style={{ color: "#666" }}>
-          {myRole === "super_admin" ? "Viendo: todas" : "Viendo: asignadas a mí"}
+          {myRole === "super_admin"
+            ? "Viendo: todas"
+            : "Viendo: asignadas a mí"}
         </span>
 
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        <div
+  style={{
+    marginLeft: "auto",
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+  }}
+>
           <Link className="btn" href="/admin">
             ← Panel
           </Link>
@@ -117,138 +176,36 @@ export default async function AdminPropertiesPage({
         </div>
       </div>
 
-      {searchParams?.error ? <p className="small" style={{ color: "crimson" }}>❌ {searchParams.error}</p> : null}
-      {searchParams?.ok ? <p className="small" style={{ color: "green" }}>✅ {searchParams.ok}</p> : null}
-
-      {/* Filtros */}
-      <section className="card" style={{ padding: 16, display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "all" })}>Todas</Link>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "1" })}>Publicadas</Link>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "0" })}>No publicadas</Link>
-        </div>
-
-        <form method="GET" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-          <div>
-            <label className="small">Buscar</label>
-            <input className="input" name="q" defaultValue={q} placeholder="título..." />
-          </div>
-
-          <div>
-            <label className="small">Ciudad</label>
-            <input className="input" name="city" defaultValue={fCity} placeholder="Mar del Plata..." />
-          </div>
-
-          <div>
-            <label className="small">Operación</label>
-            <select className="input" name="operation" defaultValue={fOperation}>
-              <option value="">(todas)</option>
-              {operations.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="small">Tipo</label>
-            <select className="input" name="type" defaultValue={fType}>
-              <option value="">(todos)</option>
-              {types.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
-          </div>
-
-          <input type="hidden" name="published" value={fPublished} />
-
-          <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
-            <button className="btn btnPrimary" type="submit">Filtrar</button>
-            <Link className="btn" href="/admin/propiedades">Limpiar</Link>
-          </div>
-        </form>
-
-        <div className="small" style={{ color: "#666" }}>
-          Resultados: <b>{rows.length}</b>
-        </div>
-      </section>
-
-      {/* Crear */}
+      {/* Filtros rápidos */}
       <section className="card" style={{ padding: 16 }}>
-        <h2 style={{ marginTop: 0 }}>Cargar propiedad</h2>
-
-        <form action={createPropertyAction} style={{ display: "grid", gap: 12, maxWidth: 900 }}>
-          <div>
-            <label className="small">Título</label>
-            <input className="input" name="title" required />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            <div>
-              <label className="small">Operación (texto interno)</label>
-              <select className="input" name="purpose" defaultValue="sale">
-                <option value="sale">sale</option>
-                <option value="rent">rent</option>
-                <option value="day_rent">day_rent</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="small">Tipo (texto interno)</label>
-              <select className="input" name="property_type" defaultValue="house">
-                <option value="house">house</option>
-                <option value="apartment">apartment</option>
-                <option value="studio">studio</option>
-                <option value="quinta">quinta</option>
-                <option value="land">land</option>
-                <option value="commercial">commercial</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="small">Ciudad</label>
-              <input className="input" name="city" />
-            </div>
-
-            <div>
-              <label className="small">Barrio</label>
-              <input className="input" name="neighborhood" />
-            </div>
-          </div>
-
-          <div>
-            <label className="small">Dirección</label>
-            <input className="input" name="address" />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            <div>
-              <label className="small">Precio ARS</label>
-              <input className="input" name="price_ars" inputMode="decimal" />
-            </div>
-            <div>
-              <label className="small">Precio USD</label>
-              <input className="input" name="price_usd" inputMode="decimal" />
-            </div>
-            <div>
-              <label className="small">Propietario</label>
-              <input className="input" name="owner_name" />
-            </div>
-            <div>
-              <label className="small">Teléfono</label>
-              <input className="input" name="owner_phone" />
-            </div>
-          </div>
-
-          <button className="btn btnPrimary" type="submit">Crear</button>
-        </form>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Link className="btn" href={buildBackLink({ ...searchParams, published: "all" })}>
+            Todas
+          </Link>
+          <Link className="btn" href={buildBackLink({ ...searchParams, published: "1" })}>
+            Publicadas
+          </Link>
+          <Link className="btn" href={buildBackLink({ ...searchParams, published: "0" })}>
+            No publicadas
+          </Link>
+          <Link className="btn" href={buildBackLink({ ...searchParams, published: "revision" })}>
+            En revisión
+          </Link>
+        </div>
       </section>
 
-      {/* Listado */}
+      {/* LISTADO (NO TOCADO) */}
       <section className="card" style={{ padding: 16 }}>
         <h2 style={{ marginTop: 0 }}>Listado</h2>
 
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+  <table
+    style={{
+      width: "100%",
+      borderCollapse: "collapse",
+      minWidth: 900,
+    }}
+  >
             <thead>
               <tr>
                 <th style={th}>Foto</th>
@@ -266,48 +223,49 @@ export default async function AdminPropertiesPage({
             <tbody>
               {rows.map((r) => {
                 const img = mediaMap.get(r.id) ?? null;
-                const op = (r.operation as string) || r.purpose || "-";
-                const ty = (r.type as string) || r.property_type || "-";
                 const price = formatPrice(r.price_ars, r.price_usd);
                 const back = buildBackLink(searchParams);
 
                 return (
                   <tr key={r.id}>
-                    <td style={{ ...td, width: 90 }}>
+                    <td style={td}>
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt="principal" style={{ width: 70, height: 52, objectFit: "cover", borderRadius: 8, border: "1px solid #eee" }} />
+                        <img
+                          src={img}
+                          alt=""
+                          style={{ width: 70, height: 52, objectFit: "cover", borderRadius: 8 }}
+                        />
                       ) : (
-                        <div className="small" style={{ color: "#999" }}>sin foto</div>
+                        <span className="small">sin foto</span>
                       )}
                     </td>
 
                     <td style={td}>
-                      <div style={{ fontWeight: 800 }}>
-                        <Link href={`/admin/propiedades/${r.id}`} style={{ textDecoration: "none" }}>
-                          {r.title}
-                        </Link>
-                      </div>
-                      <div className="small" style={{ color: "#666" }}>
-                        {new Date(r.created_at).toLocaleString()}
-                      </div>
+                      <Link href={`/admin/propiedades/${r.id}`}>
+                        <b>{r.title}</b>
+                      </Link>
                     </td>
 
-                    <td style={td}>{op}</td>
-                    <td style={td}>{ty}</td>
-
+                    <td style={td}>{r.operation ?? "-"}</td>
+                    <td style={td}>{r.type ?? "-"}</td>
                     <td style={td}>
-                      {r.city ?? "-"}
+                      {r.city}
                       {r.neighborhood ? `, ${r.neighborhood}` : ""}
                     </td>
-
                     <td style={td}>{price}</td>
-
-                    <td style={td}>{r.is_published ? "✅ Publicada" : "— No publicada"}</td>
+                    <td style={td}>
+                      {r.status === "en_revision"
+                        ? "🕓 En revisión"
+                        : r.is_published
+                        ? "✅ Publicada"
+                        : "— No publicada"}
+                    </td>
 
                     {myRole === "super_admin" ? (
                       <td style={td}>
-                        {r.agent_id ? agentLabel.get(r.agent_id) ?? `${String(r.agent_id).slice(0, 8)}...` : "-"}
+                        {r.agent_id
+                          ? agentLabel.get(r.agent_id)
+                          : "-"}
                       </td>
                     ) : null}
 
@@ -325,13 +283,13 @@ export default async function AdminPropertiesPage({
                 );
               })}
 
-              {rows.length === 0 ? (
+              {rows.length === 0 && (
                 <tr>
-                  <td style={td} colSpan={myRole === "super_admin" ? 9 : 8}>
+                  <td style={td} colSpan={9}>
                     No hay propiedades con esos filtros.
                   </td>
                 </tr>
-              ) : null}
+              )}
             </tbody>
           </table>
         </div>
@@ -339,6 +297,8 @@ export default async function AdminPropertiesPage({
     </div>
   );
 }
+
+/* utils */
 
 function buildBackLink(sp?: Record<string, string | undefined>) {
   const params = new URLSearchParams();
@@ -370,12 +330,10 @@ const th: React.CSSProperties = {
   color: "#666",
   borderBottom: "1px solid #eee",
   padding: "10px 8px",
-  whiteSpace: "nowrap",
 };
 
 const td: React.CSSProperties = {
   borderBottom: "1px solid #f1f1f1",
   padding: "10px 8px",
-  verticalAlign: "top",
   fontSize: 14,
 };

@@ -115,13 +115,15 @@ export default async function PropiedadesPage({
   const page = Math.max(1, Number(toStr(searchParams?.page) || "1") || 1);
 
   // 1) Traemos un lote razonable (filtrado robusto en memoria)
-  const { data: rawProps, error: propsErr } = await admin
-    .from("properties")
-    .select("id,title,city,neighborhood,operation,type,price_ars,price_usd,is_published,status,published_at,created_at")
-    .or("is_published.eq.true,status.eq.publicada")
-    .order("published_at", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(800);
+const { data: rawProps, error: propsErr } = await admin
+  .from("properties")
+  .select(
+    "id,title,city,neighborhood,operation,type,price_ars,price_usd,is_published,status,published_at,created_at"
+  )
+  .eq("is_published", true)
+  .order("published_at", { ascending: false })
+  .order("created_at", { ascending: false })
+  .limit(800);
 
   let props: PropertyRow[] = (rawProps as any as PropertyRow[]) ?? [];
 
@@ -387,7 +389,7 @@ export default async function PropiedadesPage({
               style={{
                 marginTop: 12,
                 display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                 gap: 12,
               }}
             >

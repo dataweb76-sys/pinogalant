@@ -185,3 +185,7 @@ body{
   .grid-4{ grid-template-columns: 1fr; }
   .btn{ width: 100%; }
 }
+.property-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}

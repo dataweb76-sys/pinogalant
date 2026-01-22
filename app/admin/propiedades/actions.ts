@@ -12,7 +12,12 @@ async function requireAdmin() {
   if (!data.user) redirect("/login?next=/admin/propiedades");
 
   const admin = createSupabaseAdminClient();
-  const me = await admin.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+  const me = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
   const role = (me.data?.role as Role | undefined) ?? "owner";
 
   if (role !== "admin" && role !== "super_admin") {
@@ -29,7 +34,9 @@ async function pickEnumValue(
   prefer?: string
 ) {
   for (const enumType of enumTypeNames) {
-    const { data, error } = await admin.rpc("enum_values", { enum_name: enumType });
+    const { data, error } = await admin.rpc("enum_values", {
+      enum_name: enumType,
+    });
     if (error || !Array.isArray(data) || data.length === 0) continue;
 
     const values = data as string[];
@@ -37,9 +44,14 @@ async function pickEnumValue(
     return values[0];
   }
 
-  throw new Error(`No pude leer valores del enum. Probé: ${enumTypeNames.join(", ")}`);
+  throw new Error(
+    `No pude leer valores del enum. Probé: ${enumTypeNames.join(", ")}`
+  );
 }
 
+/* ============================
+   CREAR PROPIEDAD (EXISTENTE)
+============================ */
 export async function createPropertyAction(formData: FormData) {
   const { admin, meId, role } = await requireAdmin();
 
@@ -58,19 +70,21 @@ export async function createPropertyAction(formData: FormData) {
   const price_usd = toNum(formData.get("price_usd"));
 
   const agent_id_raw = String(formData.get("agent_id") || "").trim();
-  const agent_id = role === "super_admin" && agent_id_raw ? agent_id_raw : meId;
+  const agent_id =
+    role === "super_admin" && agent_id_raw ? agent_id_raw : meId;
 
   if (!title) redirect("/admin/propiedades?error=missing_title");
 
-  // enums reales de tu base
-  const operation = await pickEnumValue(admin, ["property_operation", "operation"]);
+  const operation = await pickEnumValue(admin, [
+    "property_operation",
+    "operation",
+  ]);
   const type = await pickEnumValue(admin, ["property_type", "type"]);
   const status = await pickEnumValue(admin, ["property_status", "status"]);
 
   const ins = await admin
     .from("properties")
     .insert({
-      // obligatorias del schema viejo
       title,
       operation,
       type,
@@ -80,7 +94,6 @@ export async function createPropertyAction(formData: FormData) {
       show_both: true,
       has_garage: false,
 
-      // nuestras
       city: city || null,
       neighborhood: neighborhood || null,
       address: address || null,
@@ -103,11 +116,50 @@ export async function createPropertyAction(formData: FormData) {
     .select("id")
     .single();
 
-  if (ins.error) redirect(`/admin/propiedades?error=${encodeURIComponent(ins.error.message)}`);
+  if (ins.error)
+    redirect(
+      `/admin/propiedades?error=${encodeURIComponent(ins.error.message)}`
+    );
 
   redirect(`/admin/propiedades/${ins.data.id}?ok=created`);
 }
 
+/* ============================
+   NUEVO ✅ APROBAR PROPIEDAD
+   SOLO DESDE "EN REVISIÓN"
+============================ */
+export async function approvePropertyAction(formData: FormData) {
+  const { admin, meId } = await requireAdmin();
+
+  const id = String(formData.get("id") || "");
+  if (!id) redirect("/admin/propiedades?error=missing_id");
+
+  const upd = await admin
+    .from("properties")
+    .update({
+      status: "aprobada",
+      agent_id: meId,
+      assigned_agent_id: meId,
+    })
+    .eq("id", id)
+    .eq("status", "en_revision")
+    .select("id")
+    .maybeSingle();
+
+  if (upd.error)
+    redirect(
+      `/admin/propiedades?error=${encodeURIComponent(upd.error.message)}`
+    );
+
+  if (!upd.data)
+    redirect("/admin/propiedades?error=not_in_revision");
+
+  redirect("/admin/propiedades?ok=approved");
+}
+
+/* ============================
+   PUBLICAR / DESPUBLICAR
+============================ */
 export async function togglePublishAction(formData: FormData) {
   const { admin, meId, role } = await requireAdmin();
 
@@ -126,25 +178,34 @@ export async function togglePublishAction(formData: FormData) {
     .select("id")
     .maybeSingle();
 
-  if (upd.error) redirect(`/admin/propiedades?error=${encodeURIComponent(upd.error.message)}`);
+  if (upd.error)
+    redirect(
+      `/admin/propiedades?error=${encodeURIComponent(upd.error.message)}`
+    );
   if (!upd.data) redirect(`/admin/propiedades?error=not_allowed`);
 
   redirect(next || "/admin/propiedades?ok=updated");
 }
 
+/* ============================
+   ELIMINAR PROPIEDAD
+============================ */
 export async function deletePropertyAction(formData: FormData) {
   const { admin, role } = await requireAdmin();
 
   const id = String(formData.get("id") || "");
   if (!id) redirect("/admin/propiedades?error=missing_id");
 
-  if (role !== "super_admin") redirect("/admin/propiedades?error=only_super_admin");
+  if (role !== "super_admin")
+    redirect("/admin/propiedades?error=only_super_admin");
 
-  // Borra property_media (por FK cascade suele bastar, pero lo hacemos explícito por las dudas)
   await admin.from("property_media").delete().eq("property_id", id);
 
   const del = await admin.from("properties").delete().eq("id", id);
-  if (del.error) redirect(`/admin/propiedades?error=${encodeURIComponent(del.error.message)}`);
+  if (del.error)
+    redirect(
+      `/admin/propiedades?error=${encodeURIComponent(del.error.message)}`
+    );
 
   redirect("/admin/propiedades?ok=deleted");
 }
