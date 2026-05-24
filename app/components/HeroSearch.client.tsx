@@ -49,7 +49,7 @@ export default function HeroSearch() {
         >
           <option value="">Tipo de propiedad</option>
           <option value="casa">Casa</option>
-          <option value="departamento">Departamento</option>
+          <option value="depto">Departamento</option>
           <option value="terreno">Terreno</option>
           <option value="local">Local comercial</option>
           <option value="oficina">Oficina</option>
