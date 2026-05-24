@@ -1,79 +1,68 @@
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-
 import PropertyCard from "@/app/components/PropertyCard";
-import AgentsOnlineWidget from "@/app/components/AgentsOnlineWidget.client";
+import HeroSearch from "@/app/components/HeroSearch.client";
 
 export const runtime = "nodejs";
 
-type PropertyRow = {
-  id: string;
-  title: string;
-  city: string | null;
-  neighborhood: string | null;
-  operation: string;
-  type: string;
-  price_ars: string | number | null;
-  price_usd: string | number | null;
-  is_published: boolean;
-};
-
 type MediaRow = {
-  id: string;
   property_id: string;
   kind: string | null;
   url: string | null;
   sort_order: number | null;
 };
 
-function pickCover(list: MediaRow[]) {
-  if (!list || list.length === 0) return null;
+const CATEGORIES = [
+  { key: "casa",         label: "Casas",          icon: "🏠" },
+  { key: "departamento", label: "Departamentos",   icon: "🏢" },
+  { key: "terreno",      label: "Terrenos",        icon: "📐" },
+  { key: "local",        label: "Locales",         icon: "🏪" },
+  { key: "oficina",      label: "Oficinas",        icon: "💼" },
+  { key: "campo",        label: "Campos",          icon: "🌾" },
+];
 
-  const ordered = [...list].sort((a, b) => {
-    const ao = a.sort_order ?? 999999;
-    const bo = b.sort_order ?? 999999;
-    return ao - bo;
-  });
-
-  const img = ordered.find((m) => (m.kind || "").toLowerCase() === "image" && m.url);
+function pickCover(media: MediaRow[]) {
+  if (!media?.length) return null;
+  const sorted = [...media].sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
+  const img = sorted.find((m) => (m.kind || "").toLowerCase() === "image" && m.url);
   if (img) return { url: img.url!, kind: "image" as const };
-
-  const vid = ordered.find((m) => (m.kind || "").toLowerCase() === "video" && m.url);
+  const vid = sorted.find((m) => (m.kind || "").toLowerCase() === "video" && m.url);
   if (vid) return { url: vid.url!, kind: "video" as const };
-
-  const first = ordered.find((m) => !!m.url);
+  const first = sorted.find((m) => !!m.url);
   if (first?.url) return { url: first.url, kind: (first.kind || "image") as "image" | "video" };
-
   return null;
 }
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes.user ?? null;
-
   const admin = createSupabaseAdminClient();
 
-  const brandColor = "#B48A73";
-  const darkColor = "#2D3134";
+  const [{ data: props }, { data: allProps }] = await Promise.all([
+    admin
+      .from("properties")
+      .select("id,title,city,neighborhood,operation,type,price_ars,price_usd")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false })
+      .limit(9),
+    admin
+      .from("properties")
+      .select("type")
+      .eq("is_published", true),
+  ]);
 
-  const { data: props, error: propsErr } = await admin
-    .from("properties")
-    .select("id,title,city,neighborhood,operation,type,price_ars,price_usd,is_published,published_at")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false })
-    .limit(12);
+  const counts = (allProps || []).reduce((acc: Record<string, number>, p) => {
+    acc[p.type] = (acc[p.type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const totalPublished = allProps?.length ?? 0;
 
   const mediaMap = new Map<string, { coverUrl?: string; coverKind?: "image" | "video" }>();
-
   if (props?.length) {
     const ids = props.map((p) => p.id);
     const { data: media } = await admin
       .from("property_media")
       .select("property_id,kind,url,sort_order")
-      .in("property_id", ids)
-      .order("sort_order", { ascending: true });
+      .in("property_id", ids);
 
     if (media) {
       const byProp = new Map<string, MediaRow[]>();
@@ -82,7 +71,6 @@ export default async function HomePage() {
         list.push(m);
         byProp.set(m.property_id, list);
       });
-
       byProp.forEach((list, pid) => {
         const cover = pickCover(list);
         if (cover) mediaMap.set(pid, { coverUrl: cover.url, coverKind: cover.kind });
@@ -92,81 +80,56 @@ export default async function HomePage() {
 
   return (
     <>
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px 100px" }}>
-        {/* HERO */}
-        <section style={{ textAlign: "center", marginBottom: 70 }}>
-          <span
-            style={{
-              display: "inline-block",
-              padding: "6px 16px",
-              borderRadius: 999,
-              background: `${brandColor}15`,
-              color: brandColor,
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: 1,
-              marginBottom: 20,
-            }}
-          >
-            PINO GALANT · SERVICIOS INMOBILIARIOS
-          </span>
-
-          <h1
-            style={{
-              fontSize: "clamp(32px, 5vw, 56px)",
-              fontWeight: 800,
-              lineHeight: 1.1,
-              letterSpacing: "-0.03em",
-              color: darkColor,
-              marginBottom: 20,
-            }}
-          >
-            Tu próxima propiedad <br />
-            <span style={{ color: brandColor }}>con asesoría real.</span>
+      {/* ===== HERO ===== */}
+      <section className="hero-section">
+        <div className="hero-inner">
+          <div className="hero-badge">✦ Pino Galant · Servicios Inmobiliarios</div>
+          <h1 className="hero-title">
+            Encontrá tu próximo hogar<br />
+            <span>con asesoría real.</span>
           </h1>
-
-          <p style={{ maxWidth: 640, margin: "0 auto 36px", fontSize: 18, color: "#666" }}>
-            Buscá por ciudad, barrio o tipo. Consultá en tiempo real con nuestros agentes.
+          <p className="hero-subtitle">
+            Más de 10 años asesorando familias en la compra, venta y alquiler de propiedades en toda la región.
           </p>
-        </section>
+          <HeroSearch />
+        </div>
+      </section>
 
-        {/* PROPIEDADES */}
-        <section style={{ marginBottom: 80 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
-            <div>
-              <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: darkColor }}>
-                Propiedades destacadas
-              </h2>
-              <div style={{ width: 60, height: 4, background: brandColor, marginTop: 10 }} />
-            </div>
-
-            <Link
-              href="/propiedades"
-              className="btn"
-              style={{
-                border: `1px solid ${brandColor}`,
-                color: brandColor,
-                padding: "8px 20px",
-                borderRadius: 10,
-                fontWeight: 600,
-              }}
-            >
-              Ver todas
+      {/* ===== CATEGORÍAS ===== */}
+      <section className="categories-section">
+        <div className="section-header">
+          <div className="section-tag">Explorá por categoría</div>
+          <h2 className="section-title">¿Qué tipo de propiedad buscás?</h2>
+          <p className="section-subtitle">Tenemos opciones para cada necesidad: compra, alquiler o inversión.</p>
+        </div>
+        <div className="categories-grid">
+          {CATEGORIES.map((cat) => (
+            <Link key={cat.key} href={`/propiedades?type=${cat.key}`} className="category-card">
+              <span className="category-icon">{cat.icon}</span>
+              <span className="category-label">{cat.label}</span>
+              <span className="category-count">
+                {counts[cat.key] ? `${counts[cat.key]} disponibles` : "Ver todas"}
+              </span>
             </Link>
-          </div>
+          ))}
+        </div>
+      </section>
 
-          {propsErr ? (
-            <p style={{ color: "crimson", textAlign: "center" }}>Error cargando propiedades</p>
-          ) : (
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-    gap: 16,
-  }}
->
-
-              {props?.map((p) => (
+      {/* ===== PROPIEDADES DESTACADAS ===== */}
+      {props && props.length > 0 && (
+        <section className="featured-section">
+          <div className="featured-inner">
+            <div className="featured-header">
+              <div>
+                <div className="section-tag" style={{ textAlign: "left" }}>Últimas publicaciones</div>
+                <h2 className="section-title" style={{ margin: 0 }}>Propiedades destacadas</h2>
+              </div>
+              <Link href="/propiedades" className="featured-header-link">
+                Ver todas las propiedades →
+              </Link>
+            </div>
+            <div className="properties-grid">
+              {props.map((p) => (
                 <PropertyCard
                   key={p.id}
                   property={{
@@ -177,11 +140,121 @@ export default async function HomePage() {
                 />
               ))}
             </div>
-          )}
+          </div>
         </section>
-      </main>
+      )}
 
-      <AgentsOnlineWidget />
+      {/* ===== QUIÉNES SOMOS ===== */}
+      <section className="about-section">
+        <div className="about-inner">
+          <div>
+            <div className="section-tag">Quiénes somos</div>
+            <h2 className="about-title">
+              Asesoramiento inmobiliario con experiencia y compromiso
+            </h2>
+            <p className="about-text">
+              En Pino Galant, nos dedicamos a acompañar a cada cliente en uno de los momentos más importantes de su vida: la compra, venta o alquiler de una propiedad. Trabajamos con transparencia, profesionalismo y atención personalizada para que cada decisión sea la correcta.
+            </p>
+            <Link href="/propiedades" className="about-cta">
+              Ver propiedades disponibles →
+            </Link>
+          </div>
+          <div className="about-stats">
+            <div className="stat-card">
+              <div className="stat-number">10+</div>
+              <div className="stat-label">Años de experiencia</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">{totalPublished > 0 ? totalPublished : "—"}</div>
+              <div className="stat-label">Propiedades disponibles</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">500+</div>
+              <div className="stat-label">Clientes satisfechos</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">100%</div>
+              <div className="stat-label">Compromiso con vos</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA CONTACTO ===== */}
+      <section className="cta-section">
+        <div className="cta-inner">
+          <div className="hero-badge" style={{ display: "inline-flex", margin: "0 auto" }}>
+            Hablemos hoy
+          </div>
+          <h2 className="cta-title">¿Tenés una propiedad o estás buscando una?</h2>
+          <p className="cta-subtitle">
+            Contactanos por WhatsApp y te respondemos en minutos. Sin vueltas.
+          </p>
+          <div className="cta-buttons">
+            <a
+              href="https://wa.me/549112345678?text=Hola!%20Me%20contacto%20desde%20la%20web%20de%20Pino%20Galant."
+              className="btn-whatsapp"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              💬 Escribinos por WhatsApp
+            </a>
+            <Link href="/propiedades" className="btn-outline-white">
+              Ver propiedades
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER ===== */}
+      <footer className="site-footer">
+        <div className="footer-inner">
+          <div>
+            <Link href="/" className="footer-logo">
+              <span className="footer-logo-badge">PG</span>
+              Pino Galant
+            </Link>
+            <p className="footer-tagline">
+              Servicios inmobiliarios profesionales. Compra, venta y alquiler de propiedades con asesoría personalizada en toda la región.
+            </p>
+          </div>
+
+          <div>
+            <div className="footer-heading">Propiedades</div>
+            <ul className="footer-links">
+              <li><Link href="/propiedades">Todas las propiedades</Link></li>
+              <li><Link href="/propiedades?operation=venta">En venta</Link></li>
+              <li><Link href="/propiedades?operation=alquiler">En alquiler</Link></li>
+              <li><Link href="/propiedades?type=casa">Casas</Link></li>
+              <li><Link href="/propiedades?type=departamento">Departamentos</Link></li>
+              <li><Link href="/propiedades?type=terreno">Terrenos</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="footer-heading">Contacto</div>
+            <ul className="footer-links">
+              <li>
+                <a href="https://wa.me/549112345678" target="_blank" rel="noopener noreferrer">
+                  💬 WhatsApp
+                </a>
+              </li>
+              <li>
+                <a href="mailto:info@pinogalant.com">
+                  ✉️ info@pinogalant.com
+                </a>
+              </li>
+              <li><Link href="/publicar">Publicar propiedad</Link></li>
+              <li><Link href="/login">Ingresar</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <span>© 2025 Pino Galant · Todos los derechos reservados</span>
+          <span>Servicios inmobiliarios profesionales</span>
+        </div>
+      </footer>
     </>
   );
 }

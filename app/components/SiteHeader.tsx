@@ -10,122 +10,156 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
 
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        background: "rgba(255,255,255,.92)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid #eee",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1180,
-          margin: "0 auto",
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
+    <header style={{
+      position: "sticky",
+      top: 0,
+      zIndex: 50,
+      background: "rgba(255,255,255,0.96)",
+      backdropFilter: "blur(14px)",
+      borderBottom: "1px solid #eee",
+    }}>
+      <div style={{
+        maxWidth: 1180,
+        margin: "0 auto",
+        padding: "0 20px",
+        height: 68,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 16,
+      }}>
         {/* LOGO */}
-        <Link
-          href="/"
-          style={{
-            fontWeight: 950,
-            letterSpacing: -0.4,
-            textDecoration: "none",
-            color: "inherit",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <span
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 12,
-              background: "#111",
-              color: "#fff",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 14,
-              fontWeight: 900,
-            }}
-          >
+        <Link href="/" style={{
+          fontWeight: 900,
+          letterSpacing: -0.5,
+          textDecoration: "none",
+          color: "inherit",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          fontSize: 17,
+          flexShrink: 0,
+        }}>
+          <span style={{
+            width: 38,
+            height: 38,
+            borderRadius: 12,
+            background: "#B48A73",
+            color: "#fff",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 14,
+            fontWeight: 900,
+          }}>
             PG
           </span>
           <span>Pino Galant</span>
         </Link>
 
-        {/* NAV */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link className="small" href="/propiedades" style={navLink}>
-            Propiedades
-          </Link>
-
-          <Link className="small" href="/publicar" style={navLink}>
-            Publicar
-          </Link>
-
-          {/* 🔒 SOLO ADMIN / SUPERADMIN */}
+        {/* NAV LINKS */}
+        <nav style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {[
+            { href: "/propiedades", label: "Propiedades" },
+            { href: "/propiedades?operation=venta", label: "Venta" },
+            { href: "/propiedades?operation=alquiler", label: "Alquiler" },
+            { href: "/publicar", label: "Publicar" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{
+                textDecoration: "none",
+                color: "#444",
+                fontSize: 14,
+                fontWeight: 600,
+                padding: "8px 14px",
+                borderRadius: 10,
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
           {isAdmin && (
-            <Link className="small" href="/admin" style={navLink}>
+            <Link href="/admin" style={{
+              textDecoration: "none",
+              color: "#B48A73",
+              fontSize: 14,
+              fontWeight: 700,
+              padding: "8px 14px",
+              borderRadius: 10,
+            }}>
               Admin
             </Link>
           )}
+        </nav>
 
-          {/* USUARIO */}
+        {/* RIGHT: WhatsApp + Auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <a
+            href="https://wa.me/549112345678"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "#25D366",
+              color: "#fff",
+              padding: "8px 16px",
+              borderRadius: 10,
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            💬 WhatsApp
+          </a>
+
           {user ? (
-            <Link
-              className="btn"
-              href="/perfil"
-              title="Mi perfil"
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <span className="small" style={{ opacity: 0.75 }}>
-                {user.roleLabel ?? "Usuario"}
-              </span>
-
-              <span
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 999,
-                  background: "#111",
-                  color: "#fff",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 900,
-                  fontSize: 12,
-                }}
-              >
+            <Link href="/perfil" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "7px 14px",
+              borderRadius: 10,
+              border: "1px solid #eee",
+              textDecoration: "none",
+              color: "inherit",
+              fontSize: 13,
+            }}>
+              <span style={{
+                width: 28,
+                height: 28,
+                borderRadius: 999,
+                background: "#2D3134",
+                color: "#fff",
+                display: "grid",
+                placeItems: "center",
+                fontWeight: 900,
+                fontSize: 11,
+                flexShrink: 0,
+              }}>
                 {(user.email?.[0] || "U").toUpperCase()}
               </span>
+              <span style={{ opacity: 0.7 }}>{user.roleLabel ?? "Usuario"}</span>
             </Link>
           ) : (
-            <Link className="btn" href="/login">
+            <Link href="/login" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "8px 16px",
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              textDecoration: "none",
+              color: "inherit",
+              fontSize: 13,
+              fontWeight: 600,
+            }}>
               Ingresar
             </Link>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
 }
-
-const navLink: React.CSSProperties = {
-  textDecoration: "none",
-  color: "inherit",
-  opacity: 0.8,
-};
