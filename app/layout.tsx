@@ -45,8 +45,6 @@ if (user?.email) {
         {/* Esto hace que cada navegador (Chrome, Edge) avise que está online */}
         {user && <PresencePing user={user} />}
         {children}
-        {/* Esto muestra la lista de todos los que avisaron */}
-        <AgentsOnlineWidget />
       </body>
     </html>
   );
