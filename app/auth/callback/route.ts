@@ -1,26 +1,58 @@
-import { NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-// Añade esto arriba de todo, justo después de los imports
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; // Opcional: asegura que no haya caché de datos
+import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic    = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get('code');
-  // Si tienes un parámetro 'next', redirige allí, si no, a la raíz
-  const next = searchParams.get('next') ?? '/';
+  const code = searchParams.get("code");
+  const next = searchParams.get("next") ?? "/";
 
   if (code) {
     const supabase = await createSupabaseServerClient();
-    
-    // Intercambiamos el código por una sesión
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
-    if (!error) {
+    const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && sessionData?.user) {
+      const user  = sessionData.user;
+      const admin = createSupabaseAdminClient();
+
+      // Verificar si el perfil está completo
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("profile_complete, role, full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!profile?.profile_complete) {
+        // Crear perfil mínimo si todavía no existe (primer login con Google)
+        if (!profile) {
+          const googleName = (user.user_metadata?.full_name ?? user.user_metadata?.name ?? "").trim();
+          const avatarUrl  = user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null;
+          await admin.from("profiles").upsert({
+            id: user.id,
+            email: user.email,
+            full_name: googleName || null,
+            first_name: googleName.split(" ")[0] ?? "",
+            last_name:  googleName.split(" ").slice(1).join(" ") ?? "",
+            avatar_url: avatarUrl,
+            role: "owner",
+            registration_type: "google",
+            profile_complete: false,
+            updated_at: new Date().toISOString(),
+          });
+        }
+        return NextResponse.redirect(
+          `${origin}/completar-perfil?next=${encodeURIComponent(next)}`
+        );
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  // Si algo falla, redirigimos a una página de error o al login
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  return NextResponse.redirect(
+    `${origin}/login?error=${encodeURIComponent("Error al iniciar sesión")}`
+  );
 }

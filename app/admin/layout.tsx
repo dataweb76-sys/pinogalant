@@ -38,8 +38,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .toUpperCase();
 
   const roleLabel =
-    profile?.role === "super_admin" ? "Superadmin"
-    : profile?.role === "admin"     ? "Admin"
+    profile?.role === "super_admin" ? "Coordinadora"
+    : profile?.role === "admin"     ? "Agente"
     : profile?.role === "agent"     ? "Agente"
     :                                 "Usuario";
 

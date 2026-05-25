@@ -1,15 +1,27 @@
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { completarPerfilAction } from "@/app/auth/actions";
 import Link from "next/link";
-import { signUpAction } from "@/app/auth/actions";
-import GoogleSignInButton from "@/app/components/GoogleSignInButton.client";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export default function RegistroPage({
+export default async function CompletarPerfilPage({
   searchParams,
 }: {
-  searchParams?: { error?: string; ok?: string; tipo?: string };
+  searchParams?: { tipo?: string; next?: string; error?: string };
 }) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) redirect("/login");
+
   const tipo = searchParams?.tipo === "inquilino" ? "inquilino" : "propietario";
+  const next = searchParams?.next ?? (tipo === "inquilino" ? "/mi-alquiler" : "/mi-propiedad");
+
+  // Pre-fill from Google metadata
+  const meta = data.user.user_metadata ?? {};
+  const defaultFirstName = meta.first_name ?? meta.given_name ?? (meta.full_name ?? meta.name ?? "").split(" ")[0] ?? "";
+  const defaultLastName  = meta.last_name  ?? meta.family_name ?? (meta.full_name ?? meta.name ?? "").split(" ").slice(1).join(" ") ?? "";
 
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "28px 16px 90px" }}>
@@ -17,26 +29,22 @@ export default function RegistroPage({
       {/* Título */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: "#B48A73", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-          Crear cuenta
+          Completar perfil
         </div>
         <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "#2D3134" }}>
-          {tipo === "inquilino" ? "Registro de inquilino" : "Registro de propietario"}
+          ¡Bienvenido/a! Completá tus datos
         </h1>
         <p style={{ margin: "6px 0 0", fontSize: 14, color: "#888" }}>
-          {tipo === "inquilino"
-            ? "Completá tus datos para que nuestros agentes puedan encontrarte la propiedad ideal."
-            : "Registrá tu cuenta para ver el estado de tu propiedad y comunicarte con el agente asignado."}
+          Registraste tu cuenta con Google. Necesitamos algunos datos más para activar tu perfil.
         </p>
       </div>
 
       {/* Selector de tipo */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
-        <Link href="?tipo=inquilino" style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "14px 18px", borderRadius: 14,
+        <Link href={`?tipo=inquilino&next=${encodeURIComponent(next)}`} style={{
+          display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderRadius: 14,
           border: tipo === "inquilino" ? "2px solid #B48A73" : "1.5px solid #e5e5e5",
-          background: tipo === "inquilino" ? "#fdf8f5" : "#fff",
-          textDecoration: "none",
+          background: tipo === "inquilino" ? "#fdf8f5" : "#fff", textDecoration: "none",
         }}>
           <span style={{ fontSize: 26 }}>🏠</span>
           <div>
@@ -44,12 +52,10 @@ export default function RegistroPage({
             <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Quiero alquilar una propiedad</div>
           </div>
         </Link>
-        <Link href="?tipo=propietario" style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "14px 18px", borderRadius: 14,
+        <Link href={`?tipo=propietario&next=${encodeURIComponent(next)}`} style={{
+          display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", borderRadius: 14,
           border: tipo === "propietario" ? "2px solid #B48A73" : "1.5px solid #e5e5e5",
-          background: tipo === "propietario" ? "#fdf8f5" : "#fff",
-          textDecoration: "none",
+          background: tipo === "propietario" ? "#fdf8f5" : "#fff", textDecoration: "none",
         }}>
           <span style={{ fontSize: 26 }}>🏢</span>
           <div>
@@ -59,34 +65,18 @@ export default function RegistroPage({
         </Link>
       </div>
 
-      {/* Error */}
       {searchParams?.error && (
         <div style={{ background: "#fff1f2", border: "1px solid #fecaca", color: "#b91c1c", padding: 14, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>
           ❌ {decodeURIComponent(searchParams.error)}
         </div>
       )}
 
-      {/* Google OAuth */}
-      <div style={{ marginBottom: 20 }}>
-        <GoogleSignInButton
-          next={tipo === "inquilino" ? "/completar-perfil?tipo=inquilino" : "/completar-perfil?tipo=propietario"}
-          label={`Continuar con Google${tipo === "inquilino" ? " (Inquilino)" : " (Propietario)"}`}
-        />
-      </div>
-
-      {/* Separador */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <div style={{ flex: 1, height: 1, background: "#eee" }} />
-        <span style={{ fontSize: 12, color: "#aaa", fontWeight: 600 }}>O completá el formulario</span>
-        <div style={{ flex: 1, height: 1, background: "#eee" }} />
-      </div>
-
-      {/* ── FORMULARIO ── */}
-      <form action={signUpAction} style={{
+      <form action={completarPerfilAction} style={{
         background: "#fff", border: "1px solid #eee", borderRadius: 16,
         padding: "24px 20px", display: "grid", gap: 24,
       }}>
         <input type="hidden" name="role_type" value={tipo} />
+        <input type="hidden" name="next" value={next} />
 
         {/* Datos personales */}
         <section>
@@ -96,11 +86,11 @@ export default function RegistroPage({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Nombre *</label>
-              <input className="input" name="first_name" required placeholder="María" />
+              <input className="input" name="first_name" required defaultValue={defaultFirstName} />
             </div>
             <div>
               <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Apellido *</label>
-              <input className="input" name="last_name" required placeholder="González" />
+              <input className="input" name="last_name" required defaultValue={defaultLastName} />
             </div>
             <div>
               <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>DNI *</label>
@@ -121,7 +111,7 @@ export default function RegistroPage({
           </div>
         </section>
 
-        {/* ── SOLO INQUILINO ── */}
+        {/* Campos extra para inquilino */}
         {tipo === "inquilino" && (
           <>
             <section>
@@ -177,12 +167,8 @@ export default function RegistroPage({
                   </select>
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Si tenés mascotas, describí (raza, cantidad)</label>
+                  <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Si tenés mascotas, describí</label>
                   <input className="input" name="pets_description" placeholder="Ej: 1 gato castrado, 1 perro mediano" />
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Referencia de alquiler anterior (opcional)</label>
-                  <input className="input" name="prev_rental_ref" placeholder="Nombre y teléfono del propietario o inmobiliaria anterior" />
                 </div>
               </div>
             </section>
@@ -223,23 +209,6 @@ export default function RegistroPage({
           </>
         )}
 
-        {/* Acceso */}
-        <section>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#B48A73", textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
-            Acceso a la cuenta
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Email *</label>
-              <input className="input" type="email" name="email" required placeholder="tu@email.com" autoComplete="email" />
-            </div>
-            <div>
-              <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Contraseña * (mín. 8 caracteres)</label>
-              <input className="input" type="password" name="password" required minLength={8} placeholder="••••••••" autoComplete="new-password" />
-            </div>
-          </div>
-        </section>
-
         <button
           type="submit"
           style={{
@@ -249,12 +218,8 @@ export default function RegistroPage({
             cursor: "pointer", fontFamily: "inherit",
           }}
         >
-          {tipo === "inquilino" ? "✓ Registrarme como Inquilino" : "✓ Registrarme como Propietario"}
+          ✓ Guardar y continuar
         </button>
-
-        <div className="small" style={{ textAlign: "center", color: "#888" }}>
-          ¿Ya tenés cuenta? <Link href="/login" style={{ color: "#B48A73", fontWeight: 700 }}>Ingresar</Link>
-        </div>
       </form>
     </main>
   );

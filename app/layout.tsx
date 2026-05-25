@@ -10,10 +10,12 @@ export const revalidate = 0;
 
 function roleToEs(role?: string | null) {
   switch (role) {
-    case "super_admin": return "Superadmin";
-    case "admin": return "Administración";
-    case "owner": return "Propietario";
-    default: return "Usuario";
+    case "super_admin": return "Coordinadora";
+    case "admin":       return "Agente";
+    case "agent":       return "Agente";
+    case "owner":       return "Propietario";
+    case "tenant":      return "Inquilino";
+    default:            return "Usuario";
   }
 }
 

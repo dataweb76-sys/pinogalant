@@ -1,41 +1,84 @@
 import { signInAction } from "@/app/auth/actions";
+import GoogleSignInButton from "@/app/components/GoogleSignInButton.client";
 import Link from "next/link";
+
+export const runtime = "nodejs";
 
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams?: { error?: string; ok?: string };
+  searchParams?: { error?: string; ok?: string; next?: string };
 }) {
+  const next = searchParams?.next ?? "/";
+
   return (
-    <div className="card" style={{ maxWidth: 520, margin: "40px auto" }}>
-      <h1>Ingresar</h1>
+    <div style={{ maxWidth: 460, margin: "48px auto", padding: "0 16px 80px" }}>
 
-      {searchParams?.error ? (
-        <p className="small" style={{ color: "crimson" }}>
-          ❌ {searchParams.error}
-        </p>
-      ) : null}
+      {/* Logo */}
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <span style={{
+          width: 52, height: 52, borderRadius: 14, background: "#B48A73",
+          color: "#fff", display: "inline-grid", placeItems: "center",
+          fontWeight: 900, fontSize: 18,
+        }}>PG</span>
+        <div style={{ marginTop: 10, fontWeight: 900, fontSize: 20, color: "#2D3134" }}>Pino Galant</div>
+        <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>Ingresá a tu cuenta</div>
+      </div>
 
-      {searchParams?.ok ? <p className="small">✅ {searchParams.ok}</p> : null}
-
-      <form action={signInAction} style={{ display: "grid", gap: 12 }}>
-        <div>
-          <label className="small">Email</label>
-          <input className="input" name="email" type="email" required />
+      {searchParams?.error && (
+        <div style={{ background: "#fff1f2", border: "1px solid #fecaca", color: "#b91c1c", padding: 14, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>
+          ❌ {decodeURIComponent(searchParams.error)}
         </div>
-        <div>
-          <label className="small">Contraseña</label>
-          <input className="input" name="password" type="password" required />
+      )}
+      {searchParams?.ok && (
+        <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", padding: 14, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>
+          ✅ {decodeURIComponent(searchParams.ok)}
+        </div>
+      )}
+
+      <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 16, padding: "24px 20px", display: "grid", gap: 16 }}>
+
+        {/* Google */}
+        <GoogleSignInButton next={next} label="Continuar con Google" />
+
+        {/* Separador */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1, height: 1, background: "#eee" }} />
+          <span style={{ fontSize: 12, color: "#aaa", fontWeight: 600 }}>o ingresá con email</span>
+          <div style={{ flex: 1, height: 1, background: "#eee" }} />
         </div>
 
-        <button className="btn btnPrimary" type="submit">
-          Ingresar
-        </button>
+        {/* Formulario email/pass */}
+        <form action={signInAction} style={{ display: "grid", gap: 12 }}>
+          <input type="hidden" name="next" value={next} />
+          <div>
+            <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Email</label>
+            <input className="input" name="email" type="email" required autoComplete="email" />
+          </div>
+          <div>
+            <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Contraseña</label>
+            <input className="input" name="password" type="password" required autoComplete="current-password" />
+          </div>
+          <button
+            type="submit"
+            style={{
+              background: "#2D3134", color: "#fff",
+              border: "none", borderRadius: 12,
+              padding: "12px", fontSize: 14, fontWeight: 800,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            Ingresar
+          </button>
+        </form>
 
-        <div className="small">
-          ¿No tenés cuenta? <Link href="/registro">Crear cuenta</Link>
+        <div className="small" style={{ textAlign: "center", color: "#888" }}>
+          ¿No tenés cuenta?{" "}
+          <Link href="/registro?tipo=inquilino" style={{ color: "#B48A73", fontWeight: 700 }}>
+            Registrarse
+          </Link>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

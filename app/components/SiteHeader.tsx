@@ -9,7 +9,9 @@ type HeaderUser = {
 };
 
 export default function SiteHeader({ user }: { user: HeaderUser | null }) {
-  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+  const isAdmin  = user?.role === "admin" || user?.role === "super_admin" || user?.role === "agent";
+  const isTenant = user?.role === "tenant";
+  const isOwner  = user?.role === "owner";
 
   return (
     <header style={{
@@ -55,12 +57,20 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
               {link.label}
             </Link>
           ))}
-          {user && !isAdmin && (
+          {isTenant && (
             <Link href="/mi-alquiler" style={{
               textDecoration: "none", color: "#B48A73", fontSize: 14, fontWeight: 700,
               padding: "8px 13px", borderRadius: 10,
             }}>
               Mi alquiler
+            </Link>
+          )}
+          {isOwner && (
+            <Link href="/mi-propiedad" style={{
+              textDecoration: "none", color: "#B48A73", fontSize: 14, fontWeight: 700,
+              padding: "8px 13px", borderRadius: 10,
+            }}>
+              Mi propiedad
             </Link>
           )}
           {isAdmin && (
@@ -133,7 +143,7 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
 
           {/* Hamburger */}
           <div className="mobile-only" style={{ display: "none" }}>
-            <MobileMenu isAdmin={isAdmin} isLoggedIn={!!user} />
+            <MobileMenu isAdmin={isAdmin} isLoggedIn={!!user} isTenant={isTenant} isOwner={isOwner} />
           </div>
         </div>
       </div>

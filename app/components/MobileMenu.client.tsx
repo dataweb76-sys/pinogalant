@@ -6,9 +6,11 @@ import Link from "next/link";
 type MobileMenuProps = {
   isAdmin: boolean;
   isLoggedIn: boolean;
+  isTenant?: boolean;
+  isOwner?: boolean;
 };
 
-export default function MobileMenu({ isAdmin, isLoggedIn }: MobileMenuProps) {
+export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
 
   // Cerrar con escape / scroll
@@ -25,8 +27,9 @@ export default function MobileMenu({ isAdmin, isLoggedIn }: MobileMenuProps) {
     { href: "/propiedades?operation=venta",  label: "En venta",       icon: "🔑" },
     { href: "/propiedades?operation=alquiler", label: "En alquiler",  icon: "📋" },
     { href: "/publicar",                     label: "Publicar",       icon: "📤" },
-    ...(isLoggedIn && !isAdmin ? [{ href: "/mi-alquiler", label: "Mi alquiler", icon: "🏡" }] : []),
-    ...(isAdmin ? [{ href: "/admin", label: "Panel Admin", icon: "⚙️" }] : []),
+    ...(isTenant ? [{ href: "/mi-alquiler",   label: "Mi alquiler",   icon: "🏡" }] : []),
+    ...(isOwner  ? [{ href: "/mi-propiedad", label: "Mi propiedad",  icon: "🏢" }] : []),
+    ...(isAdmin  ? [{ href: "/admin",         label: "Panel Agentes", icon: "⚙️" }] : []),
   ];
 
   return (
