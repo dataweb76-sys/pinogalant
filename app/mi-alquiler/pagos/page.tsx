@@ -86,7 +86,7 @@ export default async function MisPagosPage({
       )}
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
+      <div className="tenant-stats-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
         {[
           { label: "Total pagado", value: formatARS(totalPaid), color: "#dcfce7", icon: "✅" },
           { label: "Total pendiente", value: formatARS(totalPending), color: "#fef3c7", icon: "⏳" },

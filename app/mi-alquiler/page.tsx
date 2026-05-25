@@ -166,7 +166,7 @@ export default async function MiAlquilerPage({
               </div>
 
               {/* Info del contrato */}
-              <div style={{
+              <div className="tenant-stats-grid" style={{
                 display: "grid", gridTemplateColumns: "repeat(3,1fr)",
                 gap: 0, borderBottom: "1px solid #f3f3f3",
               }}>
@@ -214,7 +214,7 @@ export default async function MiAlquilerPage({
           )}
 
           {/* Cards rápidas */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+          <div className="tenant-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
 
             {/* Próximo pago */}
             <Link href="/mi-alquiler/pagos" style={{ textDecoration: "none" }}>

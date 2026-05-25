@@ -35,66 +35,70 @@ export default async function MiAlquilerLayout({ children }: { children: React.R
   return (
     <div style={{ minHeight: "100vh", background: "#F8F5F2" }}>
       {/* Header */}
-      <header style={{
+      <header className="mi-alquiler-header" style={{
         background: "#2D3134",
-        padding: "0 24px",
+        padding: "0 16px",
         display: "flex",
         alignItems: "center",
-        height: 60,
+        flexWrap: "wrap",
+        minHeight: 56,
         position: "sticky",
         top: 0,
         zIndex: 50,
         boxShadow: "0 2px 12px rgba(0,0,0,.15)",
+        gap: 0,
       }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        {/* Logo + nombre */}
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", padding: "10px 0" }}>
           <span style={{
-            width: 32, height: 32, borderRadius: 8,
+            width: 30, height: 30, borderRadius: 8,
             background: "#B48A73",
             display: "grid", placeItems: "center",
-            fontSize: 12, fontWeight: 900, color: "#fff",
+            fontSize: 11, fontWeight: 900, color: "#fff", flexShrink: 0,
           }}>PG</span>
-          <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>Pino Galant</span>
+          <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>Pino Galant</span>
         </Link>
 
-        <nav style={{ display: "flex", gap: 4, marginLeft: 32 }}>
+        {/* Nav — scrollable en mobile */}
+        <nav className="mi-alquiler-nav" style={{ display: "flex", gap: 2, marginLeft: 16, flex: 1, overflowX: "auto" }}>
           {NAV.map(item => (
             <Link
               key={item.href}
               href={item.href}
               style={{
-                color: "rgba(255,255,255,.75)",
+                color: "rgba(255,255,255,.8)",
                 textDecoration: "none",
-                padding: "8px 14px",
+                padding: "8px 12px",
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 5,
+                whiteSpace: "nowrap",
               }}
             >
-              {item.icon} {item.label}
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+        {/* Avatar + logout */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 8 }}>
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="" style={{ width: 34, height: 34, borderRadius: 999, objectFit: "cover" }} />
+            <img src={profile.avatar_url} alt="" style={{ width: 30, height: 30, borderRadius: 999, objectFit: "cover" }} />
           ) : (
             <span style={{
-              width: 34, height: 34, borderRadius: 999,
+              width: 30, height: 30, borderRadius: 999,
               background: "#B48A73", color: "#fff",
               display: "grid", placeItems: "center",
-              fontWeight: 900, fontSize: 13,
+              fontWeight: 900, fontSize: 12, flexShrink: 0,
             }}>{initials}</span>
           )}
-          <span style={{ color: "rgba(255,255,255,.75)", fontSize: 13, fontWeight: 600 }}>
-            {profile?.full_name?.split(" ")[0] ?? "Inquilino"}
-          </span>
           <Link href="/logout" style={{
-            color: "rgba(255,255,255,.4)", fontSize: 12,
-            textDecoration: "none", marginLeft: 4,
+            color: "rgba(255,255,255,.5)", fontSize: 18,
+            textDecoration: "none",
           }}>↩</Link>
         </div>
       </header>

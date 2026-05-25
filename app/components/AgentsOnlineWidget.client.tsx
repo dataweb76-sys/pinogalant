@@ -155,7 +155,7 @@ export default function AgentsOnlineWidget() {
   return (
     <>
       {/* BOTÓN FLOTANTE */}
-      <div style={{ position: "fixed", right: 18, bottom: 18, zIndex: 70 }}>
+      <div className="chat-fab" style={{ position: "fixed", right: 18, bottom: 18, zIndex: 70 }}>
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -166,7 +166,7 @@ export default function AgentsOnlineWidget() {
           }}
         >
           <span style={{ fontSize: 20 }}>💬</span>
-          <div style={{ textAlign: "left", lineHeight: 1.2 }}>
+          <div className="chat-fab-label" style={{ textAlign: "left", lineHeight: 1.2 }}>
             <div style={{ fontWeight: 900, fontSize: 14 }}>{chipText}</div>
             <div style={{ fontSize: 11, opacity: 0.75 }}>Consultá aquí</div>
           </div>
@@ -180,6 +180,7 @@ export default function AgentsOnlineWidget() {
       {/* MODAL */}
       {open && (
         <div
+          className="chat-modal"
           onClick={() => setOpen(false)}
           style={{
             position: "fixed", inset: 0, zIndex: 80,
@@ -189,6 +190,7 @@ export default function AgentsOnlineWidget() {
           }}
         >
           <div
+            className="chat-box"
             onClick={e => e.stopPropagation()}
             style={{
               width: "min(420px, 100%)", height: "min(580px, 85vh)",
