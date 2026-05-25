@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseActionClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic    = "force-dynamic";
@@ -11,25 +11,31 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/";
 
   if (code) {
-    const supabase = await createSupabaseServerClient();
+    // ✅ Usar ActionClient que SÍ persiste las cookies de sesión
+    const supabase = await createSupabaseActionClient();
     const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && sessionData?.user) {
       const user  = sessionData.user;
       const admin = createSupabaseAdminClient();
 
-      // Verificar si el perfil está completo
+      // Ver si el perfil ya está completo
       const { data: profile } = await admin
         .from("profiles")
-        .select("profile_complete, role, full_name")
+        .select("role, full_name")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (!profile?.profile_complete) {
-        // Crear perfil mínimo si todavía no existe (primer login con Google)
+      // Si no tiene perfil o no tiene nombre → completar perfil
+      if (!profile || !profile.full_name) {
+        // Crear perfil mínimo si no existe (primer login con Google)
         if (!profile) {
-          const googleName = (user.user_metadata?.full_name ?? user.user_metadata?.name ?? "").trim();
-          const avatarUrl  = user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null;
+          const googleName = (
+            user.user_metadata?.full_name ??
+            user.user_metadata?.name ?? ""
+          ).trim();
+          const avatarUrl = user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null;
+
           await admin.from("profiles").upsert({
             id: user.id,
             email: user.email,
@@ -39,7 +45,6 @@ export async function GET(request: Request) {
             avatar_url: avatarUrl,
             role: "owner",
             registration_type: "google",
-            profile_complete: false,
             updated_at: new Date().toISOString(),
           });
         }
@@ -48,11 +53,17 @@ export async function GET(request: Request) {
         );
       }
 
+      // Redirigir según rol
+      if (profile.role === "tenant") return NextResponse.redirect(`${origin}/mi-alquiler`);
+      if (profile.role === "owner")  return NextResponse.redirect(`${origin}/mi-propiedad`);
+      if (profile.role === "admin" || profile.role === "super_admin" || profile.role === "agent") {
+        return NextResponse.redirect(`${origin}/admin`);
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
   return NextResponse.redirect(
-    `${origin}/login?error=${encodeURIComponent("Error al iniciar sesión")}`
+    `${origin}/login?error=${encodeURIComponent("Error al iniciar sesión con Google. Intentá de nuevo.")}`
   );
 }
