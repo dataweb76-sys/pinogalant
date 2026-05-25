@@ -3,7 +3,6 @@ import "./globals.css";
 import { createSupabaseServerClient } from "@/lib/supabase/server"; 
 import PresencePing from "@/app/components/PresencePing.client";
 import SiteHeader from "@/app/components/SiteHeader";
-import AgentsOnlineWidget from "@/app/components/AgentsOnlineWidget.client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu.client";
+import HeaderChat from "./HeaderChat.client";
 
 type HeaderUser = {
   email: string;
@@ -35,6 +36,9 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           }}>PG</span>
           <span className="hide-xs">Pino Galant</span>
         </Link>
+
+        {/* CHAT — entre logo y nav */}
+        <HeaderChat />
 
         {/* NAV — solo desktop */}
         <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 2 }}>
