@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseActionClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 function cleanStr(v: any) {
   return String(v || "").trim();
@@ -39,30 +40,23 @@ export async function signUpAction(formData: FormData) {
   if (!postal_code) redirect(`/registro?error=${encodeURIComponent("El código postal es obligatorio")}`);
   if (!city) redirect(`/registro?error=${encodeURIComponent("La ciudad es obligatoria")}`);
 
-  const supabase = await createSupabaseActionClient();
+  const adminClient = createSupabaseAdminClient();
 
-  // 1) crear auth user
-  const { data, error } = await supabase.auth.signUp({
+  // 1) crear auth user via admin (sin enviar email de confirmación)
+  const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: {
-        username,
-        first_name,
-        last_name,
-      },
-    },
+    email_confirm: true,
+    user_metadata: { username, first_name, last_name },
   });
 
-  if (error) redirect(`/registro?error=${encodeURIComponent(error.message)}`);
+  if (createErr) redirect(`/registro?error=${encodeURIComponent(createErr.message)}`);
 
-  // 2) si ya hay sesión inmediata (en la mayoría de configs lo hay), guardamos profile
-  // si tu supabase requiere confirmación de email, data.user existe igual, pero puede no iniciar sesión.
-  const userId = data.user?.id;
+  const userId = created.user?.id;
   if (userId) {
     const full_name = `${first_name} ${last_name}`.trim();
 
-    const { error: upsertErr } = await supabase.from("profiles").upsert({
+    const { error: upsertErr } = await adminClient.from("profiles").upsert({
       id: userId,
       role: "owner",
       username,
@@ -77,10 +71,13 @@ export async function signUpAction(formData: FormData) {
       updated_at: new Date().toISOString(),
     });
 
-    if (upsertErr) {
-      redirect(`/registro?error=${encodeURIComponent(upsertErr.message)}`);
-    }
+    if (upsertErr) redirect(`/registro?error=${encodeURIComponent(upsertErr.message)}`);
   }
+
+  // 2) iniciar sesión con las credenciales recién creadas
+  const supabase = await createSupabaseActionClient();
+  const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInErr) redirect(`/login?error=${encodeURIComponent("Cuenta creada. Ingresá con tu email y clave.")}`);
 
   redirect(`/?welcome=${encodeURIComponent(first_name)}`);
 }

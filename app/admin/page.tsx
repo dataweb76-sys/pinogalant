@@ -122,11 +122,17 @@ export default async function AdminDashboard() {
     { count: totalRevision },
     { count: consultasNuevas },
     { count: totalUsers },
+    { count: alquileresActivos },
+    { count: pagosPendientes },
   ] = await Promise.all([
     admin.from("properties").select("id", { count: "exact", head: true }).eq("is_published", true),
     admin.from("properties").select("id", { count: "exact", head: true }).eq("status", "en_revision"),
     admin.from("property_inquiries").select("id", { count: "exact", head: true }).eq("status", "pending"),
     admin.from("profiles").select("id", { count: "exact", head: true }),
+    admin.from("rental_contracts").select("id", { count: "exact", head: true }).eq("status", "active"),
+    admin.from("rental_payments").select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .lte("due_date", new Date().toISOString().split("T")[0]),
   ]);
 
   /* ── Últimas 5 consultas ── */
@@ -158,12 +164,18 @@ export default async function AdminDashboard() {
       </div>
 
       {/* ── Stats ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 36 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 20 }}>
         <StatCard icon="🏠" value={totalPublicadas ?? 0} label="Propiedades publicadas" />
         <StatCard icon="🕓" value={totalRevision ?? 0}  label="En revisión"
           sub={(totalRevision ?? 0) > 0 ? "Pendiente" : undefined} />
         <StatCard icon="📩" value={consultasNuevas ?? 0} label="Consultas nuevas"
           sub={(consultasNuevas ?? 0) > 0 ? "Sin leer" : undefined} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 36 }}>
+        <StatCard icon="📄" value={alquileresActivos ?? 0} label="Contratos activos"
+          sub={(alquileresActivos ?? 0) > 0 ? "Activos" : undefined} />
+        <StatCard icon="💸" value={pagosPendientes ?? 0} label="Pagos vencidos"
+          sub={(pagosPendientes ?? 0) > 0 ? "Atención" : undefined} />
         <StatCard icon="👤" value={totalUsers ?? 0} label="Usuarios registrados" />
       </div>
 
@@ -189,8 +201,9 @@ export default async function AdminDashboard() {
             )}
             <NavCard href="/admin/auditoria" icon="📋" title="Auditoría"
               desc="Historial de cambios" badge={<Badge text="Activo" tone="ok" />} />
-            <NavCard icon="🤖" title="Contratos IA"
-              desc="Generación automática" badge={<Badge text="Próximamente" tone="soon" />} />
+            <NavCard href="/admin/alquileres" icon="📄" title="Alquileres"
+              desc="Contratos y pagos"
+              badge={<Badge text={(alquileresActivos ?? 0) > 0 ? `${alquileresActivos} activos` : "Activo"} tone="ok" />} />
           </div>
         </div>
 

@@ -159,19 +159,17 @@ export default async function AdminPropertiesPage({
             : "Viendo: asignadas a mí"}
         </span>
 
-        <div
-  style={{
-    marginLeft: "auto",
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-  }}
->
-          <Link className="btn" href="/admin">
-            ← Panel
-          </Link>
-          <Link className="btn" href="/logout">
-            Cerrar sesión
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Link className="btn" href="/admin">← Panel</Link>
+          <Link
+            href="/admin/propiedades/nueva"
+            style={{
+              background: "#2D3134", color: "#fff", textDecoration: "none",
+              padding: "8px 18px", borderRadius: 10, fontWeight: 700, fontSize: 14,
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+          >
+            + Nueva propiedad
           </Link>
         </div>
       </div>

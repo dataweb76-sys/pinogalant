@@ -3,6 +3,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseActionClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const AVATAR_BUCKET = "avatars";
 
@@ -25,32 +26,34 @@ export async function saveProfileAction(formData: FormData) {
   const avatarFile = formData.get("avatar");
   let avatar_url: string | null = null;
 
-  const { data: current } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+  const admin = createSupabaseAdminClient();
+
+  const { data: current } = await admin.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
   avatar_url = (current as any)?.avatar_url ?? null;
 
   if (avatarFile && avatarFile instanceof File && avatarFile.size > 0) {
     const ext = avatarFile.name.split(".").pop() || "jpg";
     const path = `${user.id}/${Date.now()}.${ext}`;
 
-    const up = await supabase.storage.from(AVATAR_BUCKET).upload(path, avatarFile, { upsert: true });
+    const up = await admin.storage.from(AVATAR_BUCKET).upload(path, avatarFile, { upsert: true });
 
     if (up.error) {
       redirect(`/perfil?error=${encodeURIComponent("No se pudo subir la foto: " + up.error.message)}`);
     }
 
-    const { data: pub } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
+    const { data: pub } = admin.storage.from(AVATAR_BUCKET).getPublicUrl(path);
     const url = (pub as any)?.publicUrl ?? null;
     if (url) avatar_url = url;
   }
 
-  const { error } = await supabase.from("profiles").upsert({
-    id: user.id,
+  const { error } = await admin.from("profiles").update({
     full_name: full_name || null,
     phone: phone ? cleanPhone(phone) : null,
     whatsapp: whatsapp ? cleanPhone(whatsapp) : null,
     address: address || null,
     avatar_url,
-  });
+    updated_at: new Date().toISOString(),
+  }).eq("id", user.id);
 
   if (error) redirect(`/perfil?error=${encodeURIComponent(error.message)}`);
 

@@ -56,72 +56,91 @@ export async function createPropertyAction(formData: FormData) {
   const { admin, meId, role } = await requireAdmin();
 
   const title = String(formData.get("title") || "").trim();
+  if (!title) redirect("/admin/propiedades/nueva?error=El+título+es+obligatorio");
+
+  const operation = String(formData.get("operation") || "venta");
+  const type = String(formData.get("type") || "casa");
+  const purpose = String(formData.get("purpose") || "residencial");
+
   const city = String(formData.get("city") || "").trim();
   const neighborhood = String(formData.get("neighborhood") || "").trim();
   const address = String(formData.get("address") || "").trim();
+  const province = String(formData.get("province") || "").trim();
+  const address_hidden = String(formData.get("address_hidden") || "1") === "1";
 
-  const purpose = String(formData.get("purpose") || "sale");
-  const property_type = String(formData.get("property_type") || "house");
+  const price_ars = toNum(formData.get("price_ars"));
+  const price_usd = toNum(formData.get("price_usd"));
+  const expenses_ars = toNum(formData.get("expenses_ars"));
+  const show_both = formData.get("show_both") === "1";
+
+  const rooms = toInt(formData.get("rooms"));
+  const bathrooms = toInt(formData.get("bathrooms"));
+  const area_m2 = toNum(formData.get("area_m2"));
+  const total_m2 = toNum(formData.get("total_m2"));
+  const floors = toInt(formData.get("floors"));
+  const floor_number = toInt(formData.get("floor_number"));
+  const age_years = toInt(formData.get("age_years"));
+  const has_garage = String(formData.get("has_garage") || "0") === "1";
+
+  const amenitiesRaw = formData.getAll("amenities").map(v => String(v));
 
   const owner_name = String(formData.get("owner_name") || "").trim();
   const owner_phone = String(formData.get("owner_phone") || "").trim();
 
-  const price_ars = toNum(formData.get("price_ars"));
-  const price_usd = toNum(formData.get("price_usd"));
-
   const agent_id_raw = String(formData.get("agent_id") || "").trim();
-  const agent_id =
-    role === "super_admin" && agent_id_raw ? agent_id_raw : meId;
+  const agent_id = role === "super_admin" && agent_id_raw ? agent_id_raw : meId;
 
-  if (!title) redirect("/admin/propiedades?error=missing_title");
-
-  const operation = await pickEnumValue(admin, [
-    "property_operation",
-    "operation",
-  ]);
-  const type = await pickEnumValue(admin, ["property_type", "type"]);
-  const status = await pickEnumValue(admin, ["property_status", "status"]);
+  const publish_now = formData.get("publish_now") === "1";
+  const description = String(formData.get("description") || "").trim();
 
   const ins = await admin
     .from("properties")
     .insert({
       title,
+      description: description || null,
       operation,
       type,
-      status,
-      amenities: [],
-      address_hidden: true,
-      show_both: true,
-      has_garage: false,
+      status: "borrador",
+      purpose,
+      property_type: type,
 
       city: city || null,
       neighborhood: neighborhood || null,
       address: address || null,
-
-      purpose,
-      property_type,
-
-      owner_name: owner_name || null,
-      owner_phone: owner_phone || null,
+      province: province || null,
+      address_hidden,
 
       price_ars,
       price_usd,
+      expenses_ars,
+      show_both,
+
+      rooms,
+      bathrooms,
+      area_m2,
+      total_m2,
+      floors,
+      floor_number,
+      age_years,
+      has_garage,
+      amenities: amenitiesRaw,
+
+      owner_name: owner_name || null,
+      owner_phone: owner_phone || null,
 
       agent_id,
       assigned_agent_id: agent_id,
       created_by_user_id: meId,
 
-      is_published: false,
+      is_published: publish_now,
     })
     .select("id")
     .single();
 
   if (ins.error)
-    redirect(
-      `/admin/propiedades?error=${encodeURIComponent(ins.error.message)}`
-    );
+    redirect(`/admin/propiedades/nueva?error=${encodeURIComponent(ins.error.message)}`);
 
-  redirect(`/admin/propiedades/${ins.data.id}?ok=created`);
+  redirect(`/admin/propiedades/${ins.data.id}?ok=Propiedad+creada.+Agregá+fotos+y+completá+los+detalles.`);
 }
 
 /* ============================

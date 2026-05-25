@@ -79,6 +79,18 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
               {link.label}
             </Link>
           ))}
+          {user && !isAdmin && (
+            <Link href="/mi-alquiler" style={{
+              textDecoration: "none",
+              color: "#B48A73",
+              fontSize: 14,
+              fontWeight: 700,
+              padding: "8px 14px",
+              borderRadius: 10,
+            }}>
+              Mi alquiler
+            </Link>
+          )}
           {isAdmin && (
             <Link href="/admin" style={{
               textDecoration: "none",

@@ -40,7 +40,7 @@ export default async function PerfilPage({
 
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
-    .select("role, full_name, phone, whatsapp, address, avatar_url, agent_code")
+    .select("role, full_name, phone, whatsapp, address, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -115,7 +115,7 @@ export default async function PerfilPage({
             </div>
             <div className="small" style={{ opacity: 0.7 }}>
               {roleLabel}
-              {profile?.agent_code ? ` · ID Agente: ${profile.agent_code}` : ""}
+              {""}
             </div>
             <div className="small" style={{ opacity: 0.7 }}>{user.email}</div>
           </div>
