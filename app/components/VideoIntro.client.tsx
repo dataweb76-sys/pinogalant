@@ -37,7 +37,7 @@ export default function VideoIntro() {
       pointerEvents: phase === "fadeout" ? "none" : "auto",
     }}>
 
-      {/* Video (siempre montado para que cargue) */}
+      {/* Video — centrado, no estirado */}
       <video
         ref={videoRef}
         src="/pinogalant-intro.mp4"
@@ -47,13 +47,13 @@ export default function VideoIntro() {
         style={{
           position: "absolute", inset: 0,
           width: "100%", height: "100%",
-          objectFit: "cover",
+          objectFit: "contain",
           opacity: phase === "playing" ? 1 : 0,
           transition: "opacity 0.4s",
         }}
       />
 
-      {/* Pantalla de bienvenida — cubre el video hasta que el user hace clic */}
+      {/* Pantalla de bienvenida */}
       {phase === "welcome" && (
         <div
           onClick={handleStart}
@@ -65,22 +65,12 @@ export default function VideoIntro() {
             background: "radial-gradient(ellipse at center, #2D3134 0%, #111 100%)",
           }}
         >
-          {/* Logo */}
-          <div style={{
-            width: 110, height: 110, borderRadius: "50%",
-            background: "#B48A73", display: "flex",
-            flexDirection: "column", alignItems: "center", justifyContent: "center",
-            marginBottom: 28, boxShadow: "0 0 60px rgba(180,138,115,0.4)",
-          }}>
-            <span style={{ color: "#fff", fontWeight: 900, fontSize: 34, letterSpacing: -1 }}>PG</span>
-          </div>
-
-          <div style={{ color: "#fff", fontWeight: 800, fontSize: 22, letterSpacing: 1, marginBottom: 6 }}>
-            PINO GALANT
-          </div>
-          <div style={{ color: "#B48A73", fontSize: 12, letterSpacing: 3, textTransform: "uppercase", marginBottom: 48 }}>
-            Servicios Inmobiliarios
-          </div>
+          {/* Logo real */}
+          <img
+            src="/logo.png"
+            alt="Pino Galant"
+            style={{ width: 160, height: 160, objectFit: "contain", marginBottom: 32 }}
+          />
 
           {/* Botón play */}
           <div style={{
@@ -89,24 +79,16 @@ export default function VideoIntro() {
             padding: "14px 32px", borderRadius: 999,
             fontSize: 15, fontWeight: 800,
             boxShadow: "0 4px 24px rgba(180,138,115,0.5)",
-            animation: "pulse 2s infinite",
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
             Tocá para ingresar
           </div>
-
-          <style>{`
-            @keyframes pulse {
-              0%, 100% { transform: scale(1); box-shadow: 0 4px 24px rgba(180,138,115,0.5); }
-              50% { transform: scale(1.04); box-shadow: 0 6px 32px rgba(180,138,115,0.7); }
-            }
-          `}</style>
         </div>
       )}
 
-      {/* Botón saltar — visible durante el video */}
+      {/* Botón saltar */}
       {phase === "playing" && (
         <button
           onClick={handleEnded}
