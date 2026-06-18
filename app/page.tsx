@@ -1,6 +1,7 @@
 import Link from "next/link";
 import HeroSearch from "@/app/components/HeroSearch.client";
 import PropertiesMap from "@/app/components/PropertiesMap.client";
+import WhatsAppCTA from "@/app/components/WhatsAppCTA.client";
 import {
   getAllTokkoProperties,
   tokkoPrice,
@@ -231,14 +232,7 @@ export default async function HomePage() {
             Contactanos por WhatsApp y te respondemos en minutos. Sin vueltas.
           </p>
           <div className="cta-buttons">
-            <a
-              href="https://wa.me/549112345678?text=Hola!%20Me%20contacto%20desde%20la%20web%20de%20Pino%20Galant."
-              className="btn-whatsapp"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              💬 Escribinos por WhatsApp
-            </a>
+            <WhatsAppCTA />
             <Link href="/propiedades" className="btn-outline-white">
               Ver propiedades
             </Link>
