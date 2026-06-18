@@ -8,6 +8,7 @@ import {
   tokkoLocation,
   type TokkoProperty,
 } from "@/lib/tokko";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -57,12 +58,24 @@ export default async function PropiedadesPage({
 }) {
   const sp = searchParams ?? {};
 
-  // ── Fetch todas desde Tokko (cacheado 5 min) ────────────────────────────
+  // ── Fetch propiedades + asignaciones en paralelo ────────────────────────
   let all: TokkoProperty[] = [];
+  let agentPhones: Record<number, string> = {};
   try {
-    all = await getAllTokkoProperties();
+    const admin = createSupabaseAdminClient();
+    const [props, { data: assignments }] = await Promise.all([
+      getAllTokkoProperties(),
+      admin
+        .from("tokko_agent_assignments")
+        .select("tokko_id, agents(phone)"),
+    ]);
+    all = props;
+    (assignments ?? []).forEach((a: any) => {
+      const phone = a.agents?.phone;
+      if (phone) agentPhones[a.tokko_id] = phone;
+    });
   } catch (e) {
-    console.error("Tokko error:", e);
+    console.error("Fetch error:", e);
   }
 
   // ── Filtros ──────────────────────────────────────────────────────────────
@@ -245,17 +258,25 @@ export default async function PropiedadesPage({
                     }}>
                       Ver detalle
                     </Link>
-                    <a
-                      href={`https://wa.me/${process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP}?text=${encodeURIComponent(`Hola! Me interesa la propiedad en ${p.address}. ¿Podés darme más información?`)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      style={{
-                        flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
-                        background: "#25D366", color: "#fff",
-                        textDecoration: "none", fontWeight: 700, fontSize: 14,
-                      }}
-                    >
-                      WhatsApp
-                    </a>
+                    {(() => {
+                      const raw = agentPhones[p.id] ?? process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP ?? "";
+                      const wa = raw.replace(/\D/g, "");
+                      const num = wa.startsWith("54") ? wa : `54${wa}`;
+                      const msg = encodeURIComponent(`Hola! Me interesa la propiedad en ${p.address}. ¿Podés darme más información?`);
+                      return (
+                        <a
+                          href={`https://wa.me/${num}?text=${msg}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{
+                            flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
+                            background: "#25D366", color: "#fff",
+                            textDecoration: "none", fontWeight: 700, fontSize: 14,
+                          }}
+                        >
+                          WhatsApp
+                        </a>
+                      );
+                    })()}
                   </div>
                 </article>
               );
