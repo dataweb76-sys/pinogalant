@@ -12,6 +12,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
+export const preferredRegion = ["gru1"];
 
 export async function generateStaticParams() {
   try {

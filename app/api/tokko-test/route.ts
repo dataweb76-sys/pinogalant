@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const preferredRegion = ["gru1"];
 
 export async function GET() {
   const key = process.env.TOKKO_API_KEY;

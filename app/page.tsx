@@ -11,6 +11,7 @@ import {
 
 export const runtime = "nodejs";
 export const revalidate = 300;
+export const preferredRegion = ["gru1"];
 
 const CATEGORIES = [
   { typeId: "2",  label: "Casas",        icon: "🏠" },

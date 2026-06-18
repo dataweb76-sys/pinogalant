@@ -1,6 +1,9 @@
 const API_KEY = process.env.TOKKO_API_KEY!;
 const BASE = "https://www.tokkobroker.com/api/v1";
 
+// Fuerza ejecución en São Paulo (más cercano a Argentina, evita bloqueo de IP de Tokko)
+export const preferredRegion = ["gru1"];
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 export type TokkoPhoto = {
   image: string;
