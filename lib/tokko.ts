@@ -1,4 +1,5 @@
-const API_KEY = process.env.TOKKO_API_KEY!;
+// strip BOM y espacios por si el env var se guardó con encoding incorrecto
+const API_KEY = (process.env.TOKKO_API_KEY ?? "").replace(/^﻿/, "").trim();
 const BASE = "https://www.tokkobroker.com/api/v1";
 
 // Fuerza ejecución en São Paulo (más cercano a Argentina, evita bloqueo de IP de Tokko)
