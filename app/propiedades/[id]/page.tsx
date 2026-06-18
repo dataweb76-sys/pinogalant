@@ -90,7 +90,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
           <img
             src={cover.image}
             alt={p.address}
-            style={{ width: "100%", height: 420, objectFit: "cover", display: "block" }}
+            style={{ width: "100%", height: 420, objectFit: "contain", background: "#f3f4f6", display: "block" }}
           />
         )}
         {rest.length > 0 && (
