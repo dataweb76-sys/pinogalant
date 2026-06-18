@@ -15,13 +15,14 @@ export const preferredRegion = ["gru1"];
 
 // ─── Tipos de propiedad Tokko (type.id) ──────────────────────────────────────
 const TYPE_OPTIONS = [
-  { id: "2",  label: "Casa" },
-  { id: "13", label: "Departamento" },
-  { id: "3",  label: "Terreno" },
+  { id: "3",  label: "Casa" },
+  { id: "2",  label: "Departamento" },
+  { id: "1",  label: "Terreno" },
   { id: "7",  label: "Local" },
-  { id: "8",  label: "Oficina" },
   { id: "4",  label: "Quinta" },
-  { id: "6",  label: "Galpón" },
+  { id: "9",  label: "Campo" },
+  { id: "13", label: "Condo" },
+  { id: "19", label: "Rancho" },
 ];
 
 function fmt(n: number, currency: string) {

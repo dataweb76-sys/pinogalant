@@ -14,12 +14,12 @@ export const revalidate = 300;
 export const preferredRegion = ["gru1"];
 
 const CATEGORIES = [
-  { typeId: "2",  label: "Casas",        icon: "🏠" },
-  { typeId: "13", label: "Departamentos", icon: "🏢" },
-  { typeId: "3",  label: "Terrenos",      icon: "📐" },
+  { typeId: "3",  label: "Casas",        icon: "🏠" },
+  { typeId: "2",  label: "Departamentos", icon: "🏢" },
+  { typeId: "1",  label: "Terrenos",      icon: "📐" },
   { typeId: "7",  label: "Locales",       icon: "🏪" },
-  { typeId: "8",  label: "Oficinas",      icon: "💼" },
   { typeId: "4",  label: "Quintas",       icon: "🌾" },
+  { typeId: "9",  label: "Campos",        icon: "🌿" },
 ];
 
 export default async function HomePage() {
