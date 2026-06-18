@@ -48,12 +48,12 @@ export default function HeroSearch() {
           onChange={(e) => setType(e.target.value)}
         >
           <option value="">Tipo de propiedad</option>
-          <option value="casa">Casa</option>
-          <option value="depto">Departamento</option>
-          <option value="terreno">Terreno</option>
-          <option value="local">Local comercial</option>
-          <option value="oficina">Oficina</option>
-          <option value="campo">Campo / Chacra</option>
+          <option value="3">Casa</option>
+          <option value="2">Departamento</option>
+          <option value="1">Terreno</option>
+          <option value="7">Local comercial</option>
+          <option value="4">Quinta</option>
+          <option value="9">Campo</option>
         </select>
         <button className="hero-search-btn" onClick={handleSearch}>
           🔍 Buscar

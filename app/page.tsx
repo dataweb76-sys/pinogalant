@@ -1,5 +1,6 @@
 import Link from "next/link";
 import HeroSearch from "@/app/components/HeroSearch.client";
+import PropertiesMap from "@/app/components/PropertiesMap.client";
 import {
   getAllTokkoProperties,
   tokkoPrice,
@@ -35,6 +36,26 @@ export default async function HomePage() {
     return acc;
   }, {});
 
+  const mapPins = allProps
+    .filter((p) => p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0")
+    .map((p) => {
+      const price = tokkoPrice(p);
+      const op = tokkoOperation(p);
+      return {
+        id: p.id,
+        address: p.address,
+        lat: parseFloat(p.geo_lat),
+        lng: parseFloat(p.geo_long),
+        price: price
+          ? price.currency === "USD"
+            ? `USD ${price.amount.toLocaleString("es-AR")}`
+            : `$ ${price.amount.toLocaleString("es-AR")}`
+          : "Consultar precio",
+        op,
+        url: `/propiedades/${p.id}`,
+      };
+    });
+
   return (
     <>
       {/* ===== HERO ===== */}
@@ -51,6 +72,20 @@ export default async function HomePage() {
           <HeroSearch />
         </div>
       </section>
+
+      {/* ===== MAPA ===== */}
+      {mapPins.length > 0 && (
+        <section style={{ background: "#fff", padding: "48px 0" }}>
+          <div style={{ maxWidth: "var(--container)", margin: "0 auto", padding: "0 20px" }}>
+            <div style={{ marginBottom: 24 }}>
+              <div className="section-tag">Ubicaciones</div>
+              <h2 className="section-title">Propiedades en el mapa</h2>
+              <p className="section-subtitle">Encontrá propiedades cerca de donde querés vivir.</p>
+            </div>
+            <PropertiesMap pins={mapPins} />
+          </div>
+        </section>
+      )}
 
       {/* ===== CATEGORÍAS ===== */}
       <section className="categories-section">
