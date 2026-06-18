@@ -43,7 +43,7 @@ export default function VideoIntro() {
         muted={false}
         playsInline
         onEnded={handleEnded}
-        style={{ maxWidth: "100%", maxHeight: "100vh", objectFit: "contain" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
       />
       <button
         onClick={handleSkip}
