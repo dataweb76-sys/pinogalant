@@ -10,6 +10,7 @@ export const revalidate = 0;
 const NAV_ITEMS = [
   { href: "/admin",              icon: "▦",  label: "Dashboard"    },
   { href: "/admin/propiedades",  icon: "🏠", label: "Propiedades"  },
+  { href: "/admin/agentes",      icon: "🧑‍💼", label: "Agentes"      },
   { href: "/admin/alquileres",   icon: "📄", label: "Alquileres"   },
   { href: "/admin/consultas",    icon: "📩", label: "Consultas"    },
   { href: "/admin/usuarios",     icon: "👤", label: "Usuarios"     },

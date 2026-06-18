@@ -40,35 +40,33 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
   const cover   = photos.find((ph) => ph.is_front_cover) ?? photos[0];
   const rest    = photos.filter((ph) => !ph.is_front_cover).slice(0, 4);
 
-  // Agente asignado en Supabase (override) o usar producer de Tokko
-  let agentOverride: { name: string; phone: string; photo: string | null } | null = null;
+  // Agente: primero busca asignación en Supabase, fallback al producer de Tokko
+  let agent: { name: string; phone: string; photo: string | null; position: string } | null = null;
   try {
     const admin = createSupabaseAdminClient();
-    const { data } = await admin
+    const { data: assignment } = await admin
       .from("tokko_agent_assignments")
-      .select("profiles(first_name,last_name,phone,whatsapp,avatar_url)")
-      .eq("tokko_id", String(p.id))
-      .single();
-    if (data?.profiles) {
-      const prof = data.profiles as any;
-      agentOverride = {
-        name: `${prof.first_name ?? ""} ${prof.last_name ?? ""}`.trim(),
-        phone: prof.whatsapp || prof.phone || "",
-        photo: prof.avatar_url ?? null,
-      };
+      .select("agents(name, phone, photo_url, position)")
+      .eq("tokko_id", p.id)
+      .maybeSingle();
+    const a = (assignment as any)?.agents;
+    if (a) {
+      agent = { name: a.name, phone: a.phone ?? "", photo: a.photo_url ?? null, position: a.position ?? "Agente" };
     }
-  } catch {
-    // tabla puede no existir aún, usamos producer de Tokko
+  } catch {}
+
+  if (!agent && p.producer) {
+    agent = {
+      name: p.producer.name,
+      phone: p.producer.cellphone || p.producer.phone || "",
+      photo: p.producer.picture?.includes("user.png") ? null : p.producer.picture,
+      position: "Agente",
+    };
   }
 
-  const agent = agentOverride ?? (p.producer ? {
-    name: p.producer.name,
-    phone: p.producer.cellphone || p.producer.phone || "",
-    photo: p.producer.picture?.includes("user.png") ? null : p.producer.picture,
-  } : null);
-
-  const waNumber = agent?.phone?.replace(/\D/g, "")
-    ? `54${agent.phone.replace(/\D/g, "")}`
+  const rawPhone = agent?.phone?.replace(/\D/g, "") ?? "";
+  const waNumber = rawPhone.startsWith("54") ? rawPhone
+    : rawPhone ? `54${rawPhone}`
     : process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP;
   const waMsg = encodeURIComponent(`Hola${agent ? ` ${agent.name.split(" ")[0]}` : ""}! Vi la propiedad en ${p.address} y me interesa. ¿Podés contarme más?`);
 
