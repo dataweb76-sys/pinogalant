@@ -245,7 +245,7 @@ export default async function HomePage() {
         <div className="footer-inner">
           <div>
             <Link href="/" className="footer-logo">
-              <span className="footer-logo-badge">PG</span>
+              <img src="/logo.png" alt="Pino Galant" style={{ width: 36, height: 36, objectFit: "contain" }} />
               Pino Galant
             </Link>
             <p className="footer-tagline">

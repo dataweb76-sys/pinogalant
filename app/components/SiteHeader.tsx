@@ -33,10 +33,7 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           fontWeight: 900, letterSpacing: -0.5, textDecoration: "none", color: "inherit",
           display: "inline-flex", alignItems: "center", gap: 9, fontSize: 16, flexShrink: 0,
         }}>
-          <span style={{
-            width: 36, height: 36, borderRadius: 11, background: "#B48A73",
-            color: "#fff", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 900,
-          }}>PG</span>
+          <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "contain" }} />
           <span className="hide-xs">Pino Galant</span>
         </Link>
 

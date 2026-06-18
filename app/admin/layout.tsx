@@ -64,12 +64,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             display: "flex", alignItems: "center", gap: 10,
             textDecoration: "none",
           }}>
-            <span style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "#B48A73",
-              display: "grid", placeItems: "center",
-              fontSize: 13, fontWeight: 900, color: "#fff", flexShrink: 0,
-            }}>PG</span>
+            <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
             <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>Pino Galant</span>
           </Link>
           <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,.35)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>

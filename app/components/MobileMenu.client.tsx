@@ -85,10 +85,7 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{
-                  width: 32, height: 32, borderRadius: 9, background: "#B48A73",
-                  display: "grid", placeItems: "center", fontSize: 12, fontWeight: 900, color: "#fff",
-                }}>PG</span>
+                <img src="/logo.png" alt="Pino Galant" style={{ width: 36, height: 36, objectFit: "contain" }} />
                 <span style={{ fontWeight: 900, fontSize: 16, color: "#2D3134" }}>Pino Galant</span>
               </div>
               <button

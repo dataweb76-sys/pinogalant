@@ -50,12 +50,7 @@ export default async function MiAlquilerLayout({ children }: { children: React.R
       }}>
         {/* Logo + nombre */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", padding: "10px 0" }}>
-          <span style={{
-            width: 30, height: 30, borderRadius: 8,
-            background: "#B48A73",
-            display: "grid", placeItems: "center",
-            fontSize: 11, fontWeight: 900, color: "#fff", flexShrink: 0,
-          }}>PG</span>
+          <img src="/logo.png" alt="Pino Galant" style={{ width: 34, height: 34, objectFit: "contain", flexShrink: 0 }} />
           <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>Pino Galant</span>
         </Link>
 

@@ -16,11 +16,7 @@ export default function LoginPage({
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <span style={{
-          width: 52, height: 52, borderRadius: 14, background: "#B48A73",
-          color: "#fff", display: "inline-grid", placeItems: "center",
-          fontWeight: 900, fontSize: 18,
-        }}>PG</span>
+        <img src="/logo.png" alt="Pino Galant" style={{ width: 80, height: 80, objectFit: "contain" }} />
         <div style={{ marginTop: 10, fontWeight: 900, fontSize: 20, color: "#2D3134" }}>Pino Galant</div>
         <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>Ingresá a tu cuenta</div>
       </div>
