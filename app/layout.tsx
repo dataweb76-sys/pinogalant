@@ -1,8 +1,8 @@
 import "./globals.css";
-// IMPORTANTE: Esta línea es la que faltaba y causaba el error
-import { createSupabaseServerClient } from "@/lib/supabase/server"; 
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PresencePing from "@/app/components/PresencePing.client";
 import SiteHeader from "@/app/components/SiteHeader";
+import VideoIntro from "@/app/components/VideoIntro.client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,8 +43,8 @@ if (user?.email) {
   return (
     <html lang="es">
       <body>
+        <VideoIntro />
         <SiteHeader user={headerUser} />
-        {/* Esto hace que cada navegador (Chrome, Edge) avise que está online */}
         {user && <PresencePing user={user} />}
         {children}
       </body>

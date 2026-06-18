@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu.client";
 import HeaderChat from "./HeaderChat.client";
+import WhatsAppButton from "./WhatsAppButton.client";
 
 type HeaderUser = {
   email: string;
@@ -86,18 +87,9 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
         {/* RIGHT */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {/* WhatsApp — solo desktop */}
-          <a
-            href="https://wa.me/549112345678"
-            target="_blank" rel="noopener noreferrer"
-            className="desktop-nav"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              background: "#25D366", color: "#fff", padding: "8px 14px",
-              borderRadius: 10, textDecoration: "none", fontSize: 13, fontWeight: 700,
-            }}
-          >
-            💬 WhatsApp
-          </a>
+          <div className="desktop-nav">
+            <WhatsAppButton />
+          </div>
 
           {/* Auth — solo desktop */}
           {user ? (
@@ -126,20 +118,9 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           )}
 
           {/* WhatsApp mobile (solo icono) */}
-          <a
-            href="https://wa.me/549112345678"
-            target="_blank" rel="noopener noreferrer"
-            className="mobile-only"
-            style={{
-              display: "none",
-              width: 38, height: 38, borderRadius: 10,
-              background: "#25D366", color: "#fff",
-              alignItems: "center", justifyContent: "center",
-              textDecoration: "none", fontSize: 18,
-            }}
-          >
-            💬
-          </a>
+          <div className="mobile-only" style={{ display: "none" }}>
+            <WhatsAppButton />
+          </div>
 
           {/* Hamburger */}
           <div className="mobile-only" style={{ display: "none" }}>
