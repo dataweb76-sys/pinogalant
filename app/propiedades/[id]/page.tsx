@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import GallerySlider from "./GallerySlider";
 import {
   getTokkoProperty,
   getAllTokkoProperties,
@@ -37,8 +38,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
   const type    = tokkoType(p);
   const loc     = tokkoLocation(p);
   const photos  = p.photos ?? [];
-  const cover   = photos.find((ph) => ph.is_front_cover) ?? photos[0];
-  const rest    = photos.filter((ph) => !ph.is_front_cover).slice(0, 4);
 
   // Agente: primero busca asignación en Supabase, fallback al producer de Tokko
   let agent: { name: string; phone: string; photo: string | null; position: string } | null = null;
@@ -85,31 +84,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
       </div>
 
       {/* GALERÍA */}
-      <div style={{ display: "grid", gridTemplateColumns: rest.length ? "2fr 1fr" : "1fr", gap: 8, marginBottom: 28, borderRadius: 16, overflow: "hidden" }}>
-        {cover && (
-          <img
-            src={cover.image}
-            alt={p.address}
-            style={{ width: "100%", height: 420, objectFit: "contain", background: "#f3f4f6", display: "block" }}
-          />
-        )}
-        {rest.length > 0 && (
-          <div style={{ display: "grid", gridTemplateRows: `repeat(${Math.min(rest.length, 2)}, 1fr)`, gap: 8 }}>
-            {rest.slice(0, 2).map((ph) => (
-              <img key={ph.image} src={ph.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* MINIATURAS */}
-      {photos.length > 3 && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 4 }}>
-          {photos.map((ph) => (
-            <img key={ph.thumb} src={ph.thumb} alt="" style={{ width: 80, height: 60, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
-          ))}
-        </div>
-      )}
+      <GallerySlider photos={photos} address={p.address} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 28, alignItems: "start" }}>
 
