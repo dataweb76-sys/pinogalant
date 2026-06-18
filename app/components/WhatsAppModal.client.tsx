@@ -44,8 +44,8 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
         position: "fixed", inset: 0, zIndex: 1000,
-        background: "rgba(0,0,0,0.55)", display: "flex",
-        alignItems: "center", justifyContent: "center",
+        background: "rgba(0,0,0,0.55)",
+        display: "grid", placeItems: "center",
         padding: 16, backdropFilter: "blur(3px)",
       }}
     >
