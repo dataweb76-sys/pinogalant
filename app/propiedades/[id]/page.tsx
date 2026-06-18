@@ -1,182 +1,253 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import {
+  getTokkoProperty,
+  getAllTokkoProperties,
+  tokkoPrice,
+  tokkoOperation,
+  tokkoType,
+  tokkoLocation,
+} from "@/lib/tokko";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+export const revalidate = 300;
 
-export default async function PropertyPage({ params }: { params: { id: string } }) {
-  const admin = createSupabaseAdminClient();
+export async function generateStaticParams() {
+  try {
+    const props = await getAllTokkoProperties();
+    return props.map((p) => ({ id: String(p.id) }));
+  } catch {
+    return [];
+  }
+}
 
-  const { data: p } = await admin
-    .from("properties")
-    .select("*")
-    .eq("id", params.id)
-    .eq("is_published", true)
-    .single();
+function fmt(amount: number, currency: string) {
+  if (currency === "USD") return `USD ${amount.toLocaleString("es-AR")}`;
+  return `$ ${amount.toLocaleString("es-AR")}`;
+}
 
-  if (!p) return <h1>Propiedad no encontrada</h1>;
+export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
+  const p = await getTokkoProperty(params.id);
+  if (!p) notFound();
 
-  const { data: media } = await admin
-    .from("property_media")
-    .select("url, kind, sort_order")
-    .eq("property_id", p.id)
-    .order("sort_order", { ascending: true });
+  const price   = tokkoPrice(p);
+  const op      = tokkoOperation(p);
+  const type    = tokkoType(p);
+  const loc     = tokkoLocation(p);
+  const photos  = p.photos ?? [];
+  const cover   = photos.find((ph) => ph.is_front_cover) ?? photos[0];
+  const rest    = photos.filter((ph) => !ph.is_front_cover).slice(0, 4);
 
-  const images = (media || []).filter((m) => m.kind === "image");
+  // Agente asignado en Supabase (override) o usar producer de Tokko
+  let agentOverride: { name: string; phone: string; photo: string | null } | null = null;
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data } = await admin
+      .from("tokko_agent_assignments")
+      .select("profiles(first_name,last_name,phone,whatsapp,avatar_url)")
+      .eq("tokko_id", String(p.id))
+      .single();
+    if (data?.profiles) {
+      const prof = data.profiles as any;
+      agentOverride = {
+        name: `${prof.first_name ?? ""} ${prof.last_name ?? ""}`.trim(),
+        phone: prof.whatsapp || prof.phone || "",
+        photo: prof.avatar_url ?? null,
+      };
+    }
+  } catch {
+    // tabla puede no existir aún, usamos producer de Tokko
+  }
+
+  const agent = agentOverride ?? (p.producer ? {
+    name: p.producer.name,
+    phone: p.producer.cellphone || p.producer.phone || "",
+    photo: p.producer.picture?.includes("user.png") ? null : p.producer.picture,
+  } : null);
+
+  const waNumber = agent?.phone?.replace(/\D/g, "")
+    ? `54${agent.phone.replace(/\D/g, "")}`
+    : process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP;
+  const waMsg = encodeURIComponent(`Hola${agent ? ` ${agent.name.split(" ")[0]}` : ""}! Vi la propiedad en ${p.address} y me interesa. ¿Podés contarme más?`);
+
+  const hasGeo = p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0";
 
   return (
-    <div>
-      {/* Galería */}
-      <section style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        {images[0] && (
+    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 80px" }}>
+
+      {/* BREADCRUMB */}
+      <div style={{ fontSize: 13, color: "#aaa", marginBottom: 16, display: "flex", gap: 6 }}>
+        <Link href="/" style={{ color: "#aaa", textDecoration: "none" }}>Inicio</Link>
+        <span>›</span>
+        <Link href="/propiedades" style={{ color: "#aaa", textDecoration: "none" }}>Propiedades</Link>
+        <span>›</span>
+        <span style={{ color: "#555" }}>{p.address}</span>
+      </div>
+
+      {/* GALERÍA */}
+      <div style={{ display: "grid", gridTemplateColumns: rest.length ? "2fr 1fr" : "1fr", gap: 8, marginBottom: 28, borderRadius: 16, overflow: "hidden" }}>
+        {cover && (
           <img
-            src={images[0].url}
-            style={{ width: "100%", height: 400, objectFit: "cover" }}
+            src={cover.image}
+            alt={p.address}
+            style={{ width: "100%", height: 420, objectFit: "cover", display: "block" }}
           />
         )}
-        <div style={{ display: "grid", gap: 8 }}>
-          {images.slice(1, 3).map((img) => (
-            <img
-              key={img.url}
-              src={img.url}
-              style={{ width: "100%", height: 196, objectFit: "cover" }}
-            />
+        {rest.length > 0 && (
+          <div style={{ display: "grid", gridTemplateRows: `repeat(${Math.min(rest.length, 2)}, 1fr)`, gap: 8 }}>
+            {rest.slice(0, 2).map((ph) => (
+              <img key={ph.image} src={ph.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* MINIATURAS */}
+      {photos.length > 3 && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 4 }}>
+          {photos.map((ph) => (
+            <img key={ph.thumb} src={ph.thumb} alt="" style={{ width: 80, height: 60, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
           ))}
         </div>
-      </section>
+      )}
 
-      <section style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
-        <h1>{p.title}</h1>
-        <p>
-          {p.neighborhood} · {p.city}
-        </p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 28, alignItems: "start" }}>
 
-        <h2>
-          {p.price_usd
-            ? `USD ${p.price_usd}`
-            : p.price_ars
-            ? `$ ${p.price_ars}`
-            : "Consultar"}
-        </h2>
+        {/* COLUMNA IZQUIERDA */}
+        <div>
+          {/* Badges */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            <span style={{ background: op === "venta" ? "#2D3134" : "#B48A73", color: "#fff", fontSize: 11, fontWeight: 800, padding: "4px 14px", borderRadius: 999, textTransform: "uppercase" }}>
+              {op === "venta" ? "Venta" : "Alquiler"}
+            </span>
+            <span style={{ background: "#F3EDE7", color: "#B48A73", fontSize: 11, fontWeight: 800, padding: "4px 14px", borderRadius: 999 }}>
+              {type}
+            </span>
+          </div>
 
-        <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
-          <a
-            className="btn btnPrimary"
-            href={`https://wa.me/?text=Me interesa ${p.title}`}
-          >
-            Contactar por WhatsApp
-          </a>
+          <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 900, letterSpacing: -0.5 }}>
+            {p.address}
+          </h1>
+          <div style={{ color: "#888", fontSize: 14, marginBottom: 20 }}>
+            📍 {[loc.neighborhood, loc.city].filter(Boolean).join(", ") || "Santa Rosa, La Pampa"}
+          </div>
 
-          {/* ESTE BOTÓN YA EXISTÍA LÓGICAMENTE, SOLO APUNTA */}
-          <a href="#consulta" className="btn">
-            Dejar consulta
-          </a>
+          {/* Precio */}
+          {price && (
+            <div style={{ fontSize: 32, fontWeight: 900, color: "#2D3134", letterSpacing: -1, marginBottom: 24 }}>
+              {fmt(price.amount, price.currency)}
+            </div>
+          )}
+
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 10, marginBottom: 28 }}>
+            {p.bathroom_amount > 0 && <Stat icon="🚿" label="Baños" value={p.bathroom_amount} />}
+            {(p.rooms_amount ?? 0) > 0 && <Stat icon="🛏" label="Ambientes" value={p.rooms_amount} />}
+            {(p.suite_amount ?? 0) > 0 && <Stat icon="🛏" label="Dormitorios" value={p.suite_amount} />}
+            {(p.parking_lot_amount ?? 0) > 0 && <Stat icon="🚗" label="Cochera" value={p.parking_lot_amount} />}
+            {p.roofed_surface && p.roofed_surface !== "0.00" && (
+              <Stat icon="📐" label="Cubierta" value={`${parseFloat(p.roofed_surface)} m²`} />
+            )}
+            {p.total_surface && p.total_surface !== "0.00" && (
+              <Stat icon="📏" label="Total" value={`${parseFloat(p.total_surface)} m²`} />
+            )}
+          </div>
+
+          {/* Descripción */}
+          {p.description && (
+            <div style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 800, marginBottom: 10 }}>Descripción</h2>
+              <div style={{ color: "#555", lineHeight: 1.7, fontSize: 15, whiteSpace: "pre-line" }}>
+                {p.description}
+              </div>
+            </div>
+          )}
+
+          {/* Mapa */}
+          {hasGeo && (
+            <div style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 800, marginBottom: 10 }}>Ubicación</h2>
+              <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #eee" }}>
+                <iframe
+                  width="100%"
+                  height="280"
+                  loading="lazy"
+                  style={{ display: "block" }}
+                  src={`https://maps.google.com/maps?q=${p.geo_lat},${p.geo_long}&z=15&output=embed`}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div
-          style={{
-            marginTop: 32,
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 16,
-          }}
-        >
-          <Stat label="Habitaciones" value={p.rooms} />
-          <Stat label="Baños" value={p.bathrooms} />
-          <Stat label="m²" value={p.area_m2} />
-          <Stat label="Cochera" value={p.has_garage ? "Sí" : "No"} />
+        {/* COLUMNA DERECHA — sticky */}
+        <div style={{ position: "sticky", top: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Card agente */}
+          {agent && (
+            <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 16, padding: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#B48A73", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+                Agente responsable
+              </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
+                {agent.photo ? (
+                  <img src={agent.photo} alt={agent.name} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: "2px solid #F3EDE7" }} />
+                ) : (
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#F3EDE7", display: "grid", placeItems: "center", fontSize: 22 }}>
+                    👤
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 16 }}>{agent.name}</div>
+                  <div style={{ fontSize: 13, color: "#888" }}>Pino Galant</div>
+                </div>
+              </div>
+              <a
+                href={`https://wa.me/${waNumber}?text=${waMsg}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block", textAlign: "center", padding: "13px 0",
+                  borderRadius: 12, background: "#25D366", color: "#fff",
+                  fontWeight: 800, textDecoration: "none", fontSize: 15,
+                }}
+              >
+                💬 Consultar por WhatsApp
+              </a>
+            </div>
+          )}
+
+          {/* Formulario de consulta */}
+          <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 16, padding: 20 }}>
+            <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 14 }}>Dejar una consulta</div>
+            <form action="/api/consultas" method="POST" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <input type="hidden" name="property_id" value={String(p.id)} />
+              <input type="hidden" name="property_address" value={p.address} />
+              <input className="input" name="name" placeholder="Tu nombre" required />
+              <input className="input" name="email" type="email" placeholder="Email" required />
+              <input className="input" name="phone" placeholder="Teléfono / WhatsApp" />
+              <textarea className="input" name="message" rows={3} placeholder="Tu mensaje…"
+                defaultValue={`Hola, me interesa la propiedad en ${p.address}.`} />
+              <button className="btn btnPrimary" type="submit">Enviar consulta</button>
+            </form>
+          </div>
+
+          <Link href="/propiedades" className="btn" style={{ textAlign: "center" }}>
+            ← Volver al listado
+          </Link>
         </div>
-
-        <section style={{ marginTop: 32 }}>
-          <h3>Descripción</h3>
-          <p>{p.description}</p>
-        </section>
-
-        {p.lat && p.lng && (
-          <section style={{ marginTop: 32 }}>
-            <h3>Ubicación</h3>
-            <iframe
-              width="100%"
-              height="300"
-              loading="lazy"
-              src={`https://maps.google.com/maps?q=${p.lat},${p.lng}&z=15&output=embed`}
-            />
-          </section>
-        )}
-
-        {/* ===================== CONSULTA (AGREGADO) ===================== */}
-        <section
-          id="consulta"
-          style={{
-            marginTop: 64,
-            padding: 32,
-            borderRadius: 16,
-            border: "1px solid #eee",
-            maxWidth: 720,
-          }}
-        >
-          <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12 }}>
-            Consultar por esta propiedad
-          </h3>
-
-          <form
-            action={async (formData) => {
-              "use server";
-              const supabase = await createSupabaseServerClient();
-
-              const name = String(formData.get("name") || "");
-              const email = String(formData.get("email") || "");
-              const phone = String(formData.get("phone") || "");
-              const message = String(formData.get("message") || "");
-
-              if (!name || !email || !message) return;
-
-              await supabase.from("property_inquiries").insert({
-                property_id: p.id,
-                name,
-                email,
-                phone,
-                message,
-                status: "nuevo",
-              });
-            }}
-            style={{ display: "grid", gap: 16 }}
-          >
-            <input name="name" placeholder="Nombre" required className="input" />
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              required
-              className="input"
-            />
-            <input
-              name="phone"
-              placeholder="Teléfono (opcional)"
-              className="input"
-            />
-            <textarea
-              name="message"
-              placeholder="Mensaje"
-              rows={4}
-              required
-              className="input"
-            />
-            <button type="submit" className="btn btnPrimary">
-              Enviar consulta
-            </button>
-          </form>
-        </section>
-        {/* =============================================================== */}
-      </section>
-    </div>
+      </div>
+    </main>
   );
 }
 
-function Stat({ label, value }: { label: string; value: any }) {
+function Stat({ icon, label, value }: { icon: string; label: string; value: any }) {
   return (
-    <div className="card" style={{ padding: 16, textAlign: "center" }}>
-      <div style={{ fontSize: 22, fontWeight: 700 }}>{value ?? "-"}</div>
-      <div className="small">{label}</div>
+    <div style={{ background: "#F9F6F3", borderRadius: 12, padding: "12px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: 20, marginBottom: 4 }}>{icon}</div>
+      <div style={{ fontWeight: 800, fontSize: 16, color: "#2D3134" }}>{value}</div>
+      <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>{label}</div>
     </div>
   );
 }

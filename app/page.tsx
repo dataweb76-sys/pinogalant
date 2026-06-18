@@ -1,82 +1,38 @@
 import Link from "next/link";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import PropertyCard from "@/app/components/PropertyCard";
 import HeroSearch from "@/app/components/HeroSearch.client";
+import {
+  getAllTokkoProperties,
+  tokkoPrice,
+  tokkoOperation,
+  tokkoCover,
+  tokkoType,
+  tokkoLocation,
+} from "@/lib/tokko";
 
 export const runtime = "nodejs";
-
-type MediaRow = {
-  property_id: string;
-  kind: string | null;
-  url: string | null;
-  sort_order: number | null;
-};
+export const revalidate = 300;
 
 const CATEGORIES = [
-  { key: "casa",         label: "Casas",          icon: "🏠" },
-  { key: "departamento", label: "Departamentos",   icon: "🏢" },
-  { key: "terreno",      label: "Terrenos",        icon: "📐" },
-  { key: "local",        label: "Locales",         icon: "🏪" },
-  { key: "oficina",      label: "Oficinas",        icon: "💼" },
-  { key: "campo",        label: "Campos",          icon: "🌾" },
+  { typeId: "2",  label: "Casas",        icon: "🏠" },
+  { typeId: "13", label: "Departamentos", icon: "🏢" },
+  { typeId: "3",  label: "Terrenos",      icon: "📐" },
+  { typeId: "7",  label: "Locales",       icon: "🏪" },
+  { typeId: "8",  label: "Oficinas",      icon: "💼" },
+  { typeId: "4",  label: "Quintas",       icon: "🌾" },
 ];
 
-function pickCover(media: MediaRow[]) {
-  if (!media?.length) return null;
-  const sorted = [...media].sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
-  const img = sorted.find((m) => (m.kind || "").toLowerCase() === "image" && m.url);
-  if (img) return { url: img.url!, kind: "image" as const };
-  const vid = sorted.find((m) => (m.kind || "").toLowerCase() === "video" && m.url);
-  if (vid) return { url: vid.url!, kind: "video" as const };
-  const first = sorted.find((m) => !!m.url);
-  if (first?.url) return { url: first.url, kind: (first.kind || "image") as "image" | "video" };
-  return null;
-}
-
 export default async function HomePage() {
-  const admin = createSupabaseAdminClient();
+  let allProps = [] as Awaited<ReturnType<typeof getAllTokkoProperties>>;
+  try { allProps = await getAllTokkoProperties(); } catch {}
 
-  const [{ data: props }, { data: allProps }] = await Promise.all([
-    admin
-      .from("properties")
-      .select("id,title,city,neighborhood,operation,type,price_ars,price_usd")
-      .eq("is_published", true)
-      .order("published_at", { ascending: false })
-      .limit(9),
-    admin
-      .from("properties")
-      .select("type")
-      .eq("is_published", true),
-  ]);
+  const featured = allProps.slice(0, 6);
+  const totalPublished = allProps.length;
 
-  const counts = (allProps || []).reduce((acc: Record<string, number>, p) => {
-    acc[p.type] = (acc[p.type] || 0) + 1;
+  const counts = allProps.reduce((acc: Record<string, number>, p) => {
+    const id = String(p.type?.id ?? "");
+    acc[id] = (acc[id] || 0) + 1;
     return acc;
   }, {});
-
-  const totalPublished = allProps?.length ?? 0;
-
-  const mediaMap = new Map<string, { coverUrl?: string; coverKind?: "image" | "video" }>();
-  if (props?.length) {
-    const ids = props.map((p) => p.id);
-    const { data: media } = await admin
-      .from("property_media")
-      .select("property_id,kind,url,sort_order")
-      .in("property_id", ids);
-
-    if (media) {
-      const byProp = new Map<string, MediaRow[]>();
-      media.forEach((m) => {
-        const list = byProp.get(m.property_id) ?? [];
-        list.push(m);
-        byProp.set(m.property_id, list);
-      });
-      byProp.forEach((list, pid) => {
-        const cover = pickCover(list);
-        if (cover) mediaMap.set(pid, { coverUrl: cover.url, coverKind: cover.kind });
-      });
-    }
-  }
 
   return (
     <>
@@ -104,11 +60,11 @@ export default async function HomePage() {
         </div>
         <div className="categories-grid">
           {CATEGORIES.map((cat) => (
-            <Link key={cat.key} href={`/propiedades?type=${cat.key}`} className="category-card">
+            <Link key={cat.typeId} href={`/propiedades?type=${cat.typeId}`} className="category-card">
               <span className="category-icon">{cat.icon}</span>
               <span className="category-label">{cat.label}</span>
               <span className="category-count">
-                {counts[cat.key] ? `${counts[cat.key]} disponibles` : "Ver todas"}
+                {counts[cat.typeId] ? `${counts[cat.typeId]} disponibles` : "Ver todas"}
               </span>
             </Link>
           ))}
@@ -116,12 +72,12 @@ export default async function HomePage() {
       </section>
 
       {/* ===== PROPIEDADES DESTACADAS ===== */}
-      {props && props.length > 0 && (
+      {featured.length > 0 && (
         <section className="featured-section">
           <div className="featured-inner">
             <div className="featured-header">
               <div>
-                <div className="section-tag" style={{ textAlign: "left" }}>Últimas publicaciones</div>
+                <div className="section-tag" style={{ textAlign: "left" }}>Desde Tokkobroker · en tiempo real</div>
                 <h2 className="section-title" style={{ margin: 0 }}>Propiedades destacadas</h2>
               </div>
               <Link href="/propiedades" className="featured-header-link">
@@ -129,16 +85,64 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="properties-grid">
-              {props.map((p) => (
-                <PropertyCard
-                  key={p.id}
-                  property={{
-                    ...p,
-                    coverUrl: mediaMap.get(p.id)?.coverUrl ?? null,
-                    coverKind: mediaMap.get(p.id)?.coverKind ?? null,
-                  }}
-                />
-              ))}
+              {featured.map((p) => {
+                const price = tokkoPrice(p);
+                const op    = tokkoOperation(p);
+                const cover = tokkoCover(p);
+                const type  = tokkoType(p);
+                const loc   = tokkoLocation(p);
+                return (
+                  <article key={p.id} className="prop-card">
+                    <Link href={`/propiedades/${p.id}`} style={{ display: "block", position: "relative" }}>
+                      <div style={{ aspectRatio: "4/3", background: "#f3f4f6", overflow: "hidden", position: "relative" }}>
+                        {cover ? (
+                          <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ height: "100%", display: "grid", placeItems: "center", color: "#bbb" }}>
+                            <span style={{ fontSize: 36 }}>🏠</span>
+                          </div>
+                        )}
+                        <span style={{
+                          position: "absolute", top: 12, left: 12,
+                          background: op === "venta" ? "#2D3134" : "#B48A73",
+                          color: "#fff", fontSize: 11, fontWeight: 800,
+                          padding: "4px 12px", borderRadius: 999, textTransform: "uppercase",
+                        }}>
+                          {op === "venta" ? "Venta" : "Alquiler"}
+                        </span>
+                      </div>
+                    </Link>
+                    <div style={{ padding: "16px 18px 8px" }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: "#B48A73", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{type}</div>
+                      <Link href={`/propiedades/${p.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                        <div style={{ fontWeight: 800, fontSize: 15, lineHeight: 1.3, marginBottom: 4 }}>{p.address}</div>
+                      </Link>
+                      <div style={{ fontSize: 13, color: "#999", marginBottom: 10 }}>
+                        📍 {[loc.neighborhood, loc.city].filter(Boolean).join(", ") || "Santa Rosa, La Pampa"}
+                      </div>
+                      {price && (
+                        <div style={{ fontSize: 20, fontWeight: 900, color: "#2D3134" }}>
+                          {price.currency === "USD" ? `USD ${price.amount.toLocaleString("es-AR")}` : `$ ${price.amount.toLocaleString("es-AR")}`}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: "8px 18px 18px", display: "flex", gap: 8 }}>
+                      <Link href={`/propiedades/${p.id}`} style={{
+                        flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
+                        border: "1.5px solid #2D3134", color: "#2D3134",
+                        textDecoration: "none", fontWeight: 700, fontSize: 13,
+                      }}>Ver detalle</Link>
+                      <a href={`https://wa.me/${process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP}?text=${encodeURIComponent(`Hola! Me interesa la propiedad en ${p.address}.`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{
+                          flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
+                          background: "#25D366", color: "#fff",
+                          textDecoration: "none", fontWeight: 700, fontSize: 13,
+                        }}>WhatsApp</a>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>
