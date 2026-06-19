@@ -33,9 +33,7 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           fontWeight: 900, letterSpacing: -0.5, textDecoration: "none", color: "inherit",
           display: "inline-flex", alignItems: "center", gap: 9, fontSize: 16, flexShrink: 0,
         }}>
-          <div style={{ width: 40, height: 40, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-            <img src="/logo.png" alt="Pino Galant" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
+          <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
           <span className="hide-xs">Pino Galant</span>
         </Link>
 

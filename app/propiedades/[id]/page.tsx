@@ -86,7 +86,13 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
       {/* GALERÍA */}
       <GallerySlider photos={photos} address={p.address} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 28, alignItems: "start" }}>
+      <style>{`
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 20; align-items: start; }
+        @media (min-width: 768px) { .detail-grid { grid-template-columns: 1fr 320px; gap: 28px; } }
+        .detail-sidebar { display: flex; flex-direction: column; gap: 14px; }
+        @media (min-width: 768px) { .detail-sidebar { position: sticky; top: 20px; } }
+      `}</style>
+      <div className="detail-grid">
 
         {/* COLUMNA IZQUIERDA */}
         <div>
@@ -155,8 +161,8 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
           )}
         </div>
 
-        {/* COLUMNA DERECHA — sticky */}
-        <div style={{ position: "sticky", top: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* COLUMNA DERECHA — sticky en desktop */}
+        <div className="detail-sidebar">
 
           {/* Card agente */}
           {agent && (
