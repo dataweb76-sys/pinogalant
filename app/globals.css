@@ -521,7 +521,11 @@ table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .hide-sm { display: none !important; }
 
   /* Hero */
-  .hero-section { min-height: 100vh; }
+  .hero-section {
+    min-height: 100vh;
+    background-size: cover !important;
+    background-position: center center !important;
+  }
   .hero-inner { padding: 0 20px 44px; }
   .hero-title { font-size: clamp(24px, 7vw, 36px); margin-bottom: 12px; }
   .hero-subtitle { font-size: 13px; margin-bottom: 22px; }
