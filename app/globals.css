@@ -11,9 +11,16 @@
   --container:  1180px;
 }
 
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+html, body { height: 100%; }
 body {
+  overflow-x: hidden;
+  max-width: 100vw;
   color: var(--text);
   background: #fff;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -489,6 +496,10 @@ a { color: inherit; text-decoration: none; }
   font-size: 13px;
   color: rgba(255,255,255,.3);
 }
+
+/* ===== MOBILE OVERFLOW FIX ===== */
+img, video, iframe, table { max-width: 100%; }
+table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* ===== RESPONSIVE ===== */
 

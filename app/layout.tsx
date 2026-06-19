@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import SiteHeader from "@/app/components/SiteHeader";
 import VideoIntro from "@/app/components/VideoIntro.client";
+import PWAInstall from "@/app/components/PWAInstall.client";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pinogalant.com.ar"),
@@ -85,10 +86,20 @@ if (user?.email) {
 
   return (
     <html lang="es">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#2D3134" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Pino Galant" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      </head>
       <body>
         <VideoIntro />
         <SiteHeader user={headerUser} />
         {children}
+        <PWAInstall />
       </body>
     </html>
   );
