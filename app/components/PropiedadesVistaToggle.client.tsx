@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 const PropiedadesMap = dynamic(() => import("./PropiedadesMap.client"), { ssr: false });
 
-type Pin = { id: number; address: string; lat: number; lng: number; price?: string; op: string };
+type Pin = { id: number; address: string; lat: number; lng: number; price?: string; op: string; type?: string; photo?: string };
 
 export default function PropiedadesVistaToggle({ pins }: { pins: Pin[] }) {
   const [vista, setVista] = useState<"lista" | "mapa">("lista");

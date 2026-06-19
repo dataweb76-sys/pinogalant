@@ -151,7 +151,7 @@ export default async function PropiedadesPage({
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
             <AlertasPropiedades />
-            <PropiedadesVistaToggle pins={filtered
+            <PropiedadesVistaToggle pins={props
             .filter(p => p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0")
             .map(p => {
               const pr = tokkoPrice(p);
@@ -163,6 +163,8 @@ export default async function PropiedadesPage({
                 lng: parseFloat(p.geo_long),
                 price: pr ? `${pr.currency === "USD" ? "USD" : "$"} ${pr.amount.toLocaleString("es-AR")}` : undefined,
                 op,
+                type: tokkoType(p),
+                photo: p.photos?.[0]?.image ?? undefined,
               };
             })
           } />
