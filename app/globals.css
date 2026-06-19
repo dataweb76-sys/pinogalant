@@ -91,18 +91,17 @@ a { color: inherit; text-decoration: none; }
   content: '';
   position: absolute;
   inset: 0;
-  /* oscurece solo la mitad inferior-izquierda donde va el texto, deja libre el logo top-right */
+  /* gradiente fuerte solo en la franja inferior donde va el texto */
   background:
-    linear-gradient(to top, rgba(15,18,20,0.92) 0%, rgba(15,18,20,0.55) 45%, transparent 75%),
-    linear-gradient(to right, rgba(15,18,20,0.45) 0%, transparent 60%);
+    linear-gradient(to top, rgba(10,13,16,0.95) 0%, rgba(10,13,16,0.75) 32%, rgba(10,13,16,0.15) 60%, transparent 100%);
   pointer-events: none;
 }
 .hero-inner {
   position: relative;
   z-index: 2;
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 20px 60px;
+  max-width: 680px;
+  margin: 0;
+  padding: 0 32px 56px;
   width: 100%;
 }
 .hero-badge {
@@ -121,20 +120,20 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 28px;
 }
 .hero-title {
-  font-size: clamp(38px, 6vw, 70px);
+  font-size: clamp(30px, 4vw, 52px);
   font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: #fff;
-  margin: 0 0 22px;
-  max-width: 780px;
+  margin: 0 0 16px;
+  max-width: 600px;
 }
 .hero-title span { color: #B48A73; }
 .hero-subtitle {
-  font-size: clamp(16px, 2vw, 19px);
-  color: rgba(255,255,255,.6);
-  margin: 0 0 52px;
-  max-width: 520px;
+  font-size: clamp(14px, 1.5vw, 17px);
+  color: rgba(255,255,255,.65);
+  margin: 0 0 36px;
+  max-width: 480px;
   line-height: 1.6;
 }
 
@@ -515,9 +514,9 @@ table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Hero */
   .hero-section { min-height: 100vh; }
-  .hero-inner { padding: 0 16px 48px; }
-  .hero-title { font-size: clamp(26px, 7vw, 40px); margin-bottom: 12px; max-width: 100%; }
-  .hero-subtitle { font-size: 14px; margin-bottom: 24px; max-width: 100%; }
+  .hero-inner { padding: 0 20px 44px; max-width: 100%; }
+  .hero-title { font-size: clamp(24px, 7vw, 36px); margin-bottom: 10px; }
+  .hero-subtitle { font-size: 13px; margin-bottom: 20px; }
   .hero-search { padding: 8px; border-radius: 16px; }
   .hero-search-row { flex-direction: column; gap: 8px; }
   .hero-search-select { min-width: auto; width: 100%; }
