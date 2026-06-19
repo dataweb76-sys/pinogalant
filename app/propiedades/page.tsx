@@ -133,22 +133,30 @@ export default async function PropiedadesPage({
     <main style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 16px 80px" }}>
 
       {/* HERO FILTROS */}
-      <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 18, padding: 20, marginBottom: 20 }}>
-        <h1 style={{ margin: "0 0 4px", fontSize: 26, fontWeight: 900, letterSpacing: -0.5 }}>
+      <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 18, padding: "18px 16px", marginBottom: 16 }}>
+        <h1 style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>
           Propiedades disponibles
         </h1>
-        <p style={{ margin: "0 0 16px", color: "#888", fontSize: 14 }}>
+        <p style={{ margin: "0 0 14px", color: "#888", fontSize: 13 }}>
           {total} propiedad{total !== 1 ? "es" : ""} · Santa Rosa, La Pampa
         </p>
 
+        <style>{`
+          .filtros-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+          .filtros-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+          .filtros-row3 { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+          .filtros-buscar { width: 100%; }
+          @media (min-width: 640px) {
+            .filtros-row1 { grid-template-columns: 2fr 1fr 1fr auto; }
+            .filtros-row2 { grid-template-columns: 140px 140px 1fr auto; }
+            .filtros-buscar { display: none; }
+          }
+        `}</style>
+
         <form action="/propiedades" method="GET">
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 10, marginBottom: 10 }}>
-            <input
-              className="input"
-              name="q"
-              placeholder="Buscar por dirección o zona…"
-              defaultValue={sp.q}
-            />
+          {/* Fila 1: búsqueda + operación + tipo */}
+          <div className="filtros-row1">
+            <input className="input" name="q" placeholder="Buscar por dirección o zona…" defaultValue={sp.q} style={{ gridColumn: "1 / -1" }} />
             <select className="input" name="op" defaultValue={opFilter}>
               <option value="">Operación (todas)</option>
               <option value="venta">Venta</option>
@@ -160,24 +168,23 @@ export default async function PropiedadesPage({
                 <option key={t.id} value={t.id}>{t.label}</option>
               ))}
             </select>
-            <button className="btn btnPrimary" type="submit" style={{ whiteSpace: "nowrap" }}>
-              Buscar
-            </button>
+            <button className="btn btnPrimary filtros-buscar" type="submit">Buscar</button>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <input className="input" name="price_min" placeholder="Precio mín." defaultValue={sp.price_min} style={{ width: 140 }} />
-            <input className="input" name="price_max" placeholder="Precio máx." defaultValue={sp.price_max} style={{ width: 140 }} />
-            <select className="input" name="sort" defaultValue={sort} style={{ width: 220 }}>
+          {/* Fila 2: precios + orden + buscar desktop */}
+          <div className="filtros-row2">
+            <input className="input" name="price_min" placeholder="Precio mín." defaultValue={sp.price_min} />
+            <input className="input" name="price_max" placeholder="Precio máx." defaultValue={sp.price_max} />
+            <select className="input" name="sort" defaultValue={sort}>
               <option value="recent">Ordenar: por defecto</option>
-              <option value="price_asc">Precio: menor a mayor</option>
-              <option value="price_desc">Precio: mayor a menor</option>
+              <option value="price_asc">Precio ↑</option>
+              <option value="price_desc">Precio ↓</option>
             </select>
-            <input type="hidden" name="page" value="1" />
-            <Link href="/propiedades" className="btn" style={{ marginLeft: "auto" }}>
-              Limpiar filtros
-            </Link>
+            <button className="btn btnPrimary" type="submit" style={{ whiteSpace: "nowrap" }}>Buscar</button>
           </div>
+
+          <input type="hidden" name="page" value="1" />
+          <Link href="/propiedades" className="btn" style={{ fontSize: 13 }}>Limpiar filtros</Link>
         </form>
       </div>
 
@@ -193,7 +200,8 @@ export default async function PropiedadesPage({
         </div>
       ) : (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: 16 }}>
+          <style>{`.props-grid { display: grid; grid-template-columns: 1fr; gap: 12px; } @media(min-width:480px){.props-grid{grid-template-columns:1fr 1fr;}} @media(min-width:900px){.props-grid{grid-template-columns:repeat(3,1fr);gap:16px;}}`}</style>
+          <div className="props-grid">
             {pageItems.map((p) => {
               const price = tokkoPrice(p);
               const op    = tokkoOperation(p);
@@ -231,7 +239,7 @@ export default async function PropiedadesPage({
                     </div>
                   </Link>
 
-                  <div style={{ padding: "16px 18px 12px", flexGrow: 1 }}>
+                  <div style={{ padding: "12px 14px 8px", flexGrow: 1 }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: "#B48A73", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
                       {type}
                     </div>
@@ -250,7 +258,7 @@ export default async function PropiedadesPage({
                     )}
                   </div>
 
-                  <div style={{ padding: "0 18px 18px", display: "flex", gap: 10 }}>
+                  <div style={{ padding: "0 14px 14px", display: "flex", gap: 8 }}>
                     <Link href={`/propiedades/${p.id}`} style={{
                       flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
                       border: "1.5px solid #2D3134", color: "#2D3134",
