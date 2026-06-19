@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const SYSTEM_PROMPT = `Sos un asistente de búsqueda inmobiliaria en Santa Rosa, La Pampa, Argentina.
 El usuario describe en lenguaje natural la propiedad que busca.
-Tu tarea es extraer los filtros de búsqueda y devolverlos como JSON.
+Tu tarea es extraer los filtros de búsqueda y devolverlos como JSON puro, sin markdown ni texto extra.
 
 Tipos de propiedad disponibles (type):
 - "3" = Casa
@@ -20,13 +20,12 @@ Operación (op):
 - "alquiler" = arrendar / rentar
 
 Reglas:
-- price_min y price_max son en dólares (USD). Si el usuario dice "100 mil" → 100000.
-- q es una cadena de búsqueda libre para dirección o características extra (máx 30 caracteres, puede ser vacío).
-- Si no se menciona algún campo, omitirlo del JSON (no poner null).
-- Responder SOLO con el JSON, sin texto adicional, sin markdown, sin bloques de código.
+- price_min y price_max en dólares (USD). "100 mil" → 100000.
+- q es búsqueda libre de texto (máx 30 chars, opcional).
+- Omitir campos que no se mencionen.
+- Responder SOLO con el JSON, nada más.
 
-Ejemplo de respuesta:
-{"op":"venta","type":"3","price_max":100000}`;
+Ejemplo: {"op":"venta","type":"3","price_max":100000}`;
 
 export async function POST(req: Request) {
   try {
@@ -35,11 +34,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "query requerida" }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent(`${SYSTEM_PROMPT}\n\nBúsqueda: ${query.trim()}`);
-    const text = result.response.text().trim();
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: query.trim() },
+      ],
+      max_tokens: 128,
+      temperature: 0,
+    });
 
-    // Limpiar posibles bloques markdown que Gemini agrega a veces
+    const text = completion.choices[0]?.message?.content?.trim() ?? "";
     const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     let filters: Record<string, string> = {};
