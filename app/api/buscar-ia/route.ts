@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "query requerida" }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent(`${SYSTEM_PROMPT}\n\nBúsqueda: ${query.trim()}`);
     const text = result.response.text().trim();
 

@@ -64,7 +64,6 @@ export default async function HomePage() {
       {/* ===== HERO ===== */}
       <section className="hero-section">
         <div className="hero-inner">
-          <div className="hero-badge">✦ Pino Galant · Servicios Inmobiliarios</div>
           <h1 className="hero-title">
             Encontrá tu próximo hogar<br />
             <span>con asesoría real.</span>
