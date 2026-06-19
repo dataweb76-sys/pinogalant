@@ -1,6 +1,5 @@
 import "./globals.css";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import PresencePing from "@/app/components/PresencePing.client";
 import SiteHeader from "@/app/components/SiteHeader";
 import VideoIntro from "@/app/components/VideoIntro.client";
 
@@ -45,7 +44,6 @@ if (user?.email) {
       <body>
         <VideoIntro />
         <SiteHeader user={headerUser} />
-        {user && <PresencePing user={user} />}
         {children}
       </body>
     </html>
