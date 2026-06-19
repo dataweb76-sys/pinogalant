@@ -1,5 +1,6 @@
 import Link from "next/link";
 import HeroSearch from "@/app/components/HeroSearch.client";
+import OficinaModal from "@/app/components/OficinaModal.client";
 import PropertiesMap from "@/app/components/PropertiesMap.client";
 import WhatsAppCTA from "@/app/components/WhatsAppCTA.client";
 import {
@@ -200,6 +201,7 @@ export default async function HomePage() {
             <Link href="/propiedades" className="about-cta">
               Ver propiedades disponibles →
             </Link>
+            <OficinaModal />
           </div>
           <div className="about-stats">
             <div className="stat-card">

@@ -23,16 +23,16 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
       <div style={{
         maxWidth: 1180, margin: "0 auto",
         padding: "0 16px",
-        height: 62,
+        height: 70,
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
       }}>
 
         {/* LOGO */}
         <Link href="/" style={{
           fontWeight: 900, letterSpacing: -0.5, textDecoration: "none", color: "inherit",
-          display: "inline-flex", alignItems: "center", gap: 9, fontSize: 16, flexShrink: 0,
+          display: "inline-flex", alignItems: "center", gap: 10, fontSize: 19, flexShrink: 0,
         }}>
-          <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
+          <img src="/logo.png" alt="Pino Galant" style={{ width: 50, height: 50, objectFit: "contain", flexShrink: 0 }} />
           <span className="hide-xs">Pino Galant</span>
         </Link>
 
