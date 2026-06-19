@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import EditarPagina from "./components/EditarPagina.client";
 export const runtime = "nodejs";
 export const revalidate = 30;
 
@@ -62,6 +63,9 @@ export default async function AdminDashboard() {
         <p style={{ margin: "6px 0 0", color: "#888", fontSize: 14 }}>
           {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
+        <div style={{ marginTop: 16 }}>
+          <EditarPagina />
+        </div>
       </div>
 
       {/* Stats */}
