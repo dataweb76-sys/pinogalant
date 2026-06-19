@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import BusquedaSuenos from "./BusquedaSuenos.client";
 
 export default function HeroSearch() {
   const router = useRouter();
@@ -60,5 +61,6 @@ export default function HeroSearch() {
         </button>
       </div>
     </div>
+    <BusquedaSuenos />
   );
 }
