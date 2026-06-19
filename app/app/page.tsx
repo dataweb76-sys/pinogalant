@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import InstallButton from "./InstallButton.client";
 
 export const metadata: Metadata = {
   title: "Descargá la App — Pino Galant",
@@ -71,18 +72,7 @@ export default function AppPage() {
       </div>
 
       {/* CTA */}
-      <a
-        href="/"
-        style={{
-          display: "inline-block",
-          background: "#B48A73", color: "#fff",
-          padding: "14px 36px", borderRadius: 14,
-          fontWeight: 800, fontSize: 15, textDecoration: "none",
-          letterSpacing: 0.3,
-        }}
-      >
-        Abrir la app →
-      </a>
+      <InstallButton />
 
       <Link href="/" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 20, textDecoration: "none" }}>
         pinogalant.com.ar
