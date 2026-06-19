@@ -18,11 +18,15 @@ export default async function AdminPropiedadesPage() {
 
   if (!["admin", "super_admin"].includes(profile?.role ?? "")) redirect("/");
 
-  const [tokkoProps, { data: assignments }, { data: waLeads }] = await Promise.all([
+  const [tokkoProps, { data: assignments }, { data: waLeads }, { data: extras }] = await Promise.all([
     getAllTokkoProperties().catch(() => []),
     admin.from("tokko_agent_assignments").select("tokko_id, agents(id, name, phone)"),
     admin.from("whatsapp_leads").select("property_id, created_at").order("created_at", { ascending: false }),
+    admin.from("property_extras").select("tokko_id, video_url"),
   ]);
+
+  const videosPorProp: Record<number, string> = {};
+  (extras ?? []).forEach((e: any) => { if (e.video_url) videosPorProp[e.tokko_id] = e.video_url; });
 
   // Agente por propiedad
   const agentePorProp: Record<number, { name: string; phone: string }> = {};
@@ -66,7 +70,7 @@ export default async function AdminPropiedadesPage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#f8f8f8" }}>
-              {["Propiedad", "Tipo / Operación", "Precio", "Agente asignado", "Consultas WA", ""].map((h, i) => (
+              {["Propiedad", "Tipo / Operación", "Precio", "Agente asignado", "Consultas WA", "Video", ""].map((h, i) => (
                 <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
                   color: "#888", letterSpacing: 0.5, textTransform: "uppercase",
                   borderBottom: "1px solid #eee" }}>
@@ -156,6 +160,15 @@ export default async function AdminPropiedadesPage() {
                     ) : (
                       <span style={{ fontSize: 12, color: "#ccc" }}>Sin consultas</span>
                     )}
+                  </td>
+
+                  {/* Video */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <Link href={`/admin/propiedades/${p.id}/video`}
+                      style={{ fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap",
+                        color: videosPorProp[p.id] ? "#25D366" : "#B48A73" }}>
+                      {videosPorProp[p.id] ? "✓ Con video" : "+ Video"}
+                    </Link>
                   </td>
 
                   {/* Ver */}

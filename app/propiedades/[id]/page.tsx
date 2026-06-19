@@ -4,6 +4,8 @@ import GallerySlider from "./GallerySlider";
 import WALeadButton from "@/app/components/WALeadButton.client";
 import MortgageCalc from "@/app/components/MortgageCalc.client";
 import PropiedadesSimilares from "@/app/components/PropiedadesSimilares";
+import ElBarrio from "@/app/components/ElBarrio.client";
+import VideoEmbed from "@/app/components/VideoEmbed.client";
 import {
   getTokkoProperty,
   getAllTokkoProperties,
@@ -42,19 +44,18 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
   const loc     = tokkoLocation(p);
   const photos  = p.photos ?? [];
 
-  // Agente: primero busca asignación en Supabase, fallback al producer de Tokko
+  // Agente + extras (video URL)
   let agent: { name: string; phone: string; photo: string | null; position: string } | null = null;
+  let videoUrl: string | null = null;
   try {
     const admin = createSupabaseAdminClient();
-    const { data: assignment } = await admin
-      .from("tokko_agent_assignments")
-      .select("agents(name, phone, photo_url, position)")
-      .eq("tokko_id", p.id)
-      .maybeSingle();
-    const a = (assignment as any)?.agents;
-    if (a) {
-      agent = { name: a.name, phone: a.phone ?? "", photo: a.photo_url ?? null, position: a.position ?? "Agente" };
-    }
+    const [assignmentRes, extrasRes] = await Promise.all([
+      admin.from("tokko_agent_assignments").select("agents(name, phone, photo_url, position)").eq("tokko_id", p.id).maybeSingle(),
+      admin.from("property_extras").select("video_url").eq("tokko_id", p.id).maybeSingle(),
+    ]);
+    const a = (assignmentRes.data as any)?.agents;
+    if (a) agent = { name: a.name, phone: a.phone ?? "", photo: a.photo_url ?? null, position: a.position ?? "Agente" };
+    videoUrl = extrasRes.data?.video_url ?? null;
   } catch {}
 
   if (!agent && p.producer) {
@@ -147,6 +148,9 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             </div>
           )}
 
+          {/* Video / Tour virtual */}
+          {videoUrl && <VideoEmbed url={videoUrl} />}
+
           {/* Mapa */}
           {hasGeo && (
             <div style={{ marginBottom: 28 }}>
@@ -161,6 +165,11 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                 />
               </div>
             </div>
+          )}
+
+          {/* El barrio */}
+          {hasGeo && (
+            <ElBarrio lat={parseFloat(p.geo_lat)} lng={parseFloat(p.geo_long)} />
           )}
         </div>
 
