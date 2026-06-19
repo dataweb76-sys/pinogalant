@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -8,14 +8,14 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const NAV_ITEMS = [
-  { href: "/admin",              icon: "â–¦",  label: "Dashboard"    },
-  { href: "/admin/propiedades",  icon: "ðŸ ", label: "Propiedades"  },
-  { href: "/admin/agentes",      icon: "ðŸ§‘â€ðŸ’¼", label: "Agentes"      },
-  { href: "/admin/alquileres",   icon: "ðŸ“„", label: "Alquileres"   },
-  { href: "/admin/consultas",    icon: "ðŸ“©", label: "Consultas"    },
-  { href: "/admin/usuarios",     icon: "ðŸ‘¤", label: "Usuarios"     },
-  { href: "/admin/caja",         icon: "ðŸ’°", label: "Caja"         },
-  { href: "/admin/auditoria",    icon: "ðŸ“‹", label: "AuditorÃ­a"    },
+  { href: "/admin",              icon: "▦",  label: "Dashboard"    },
+  { href: "/admin/propiedades",  icon: "🏠", label: "Propiedades"  },
+  { href: "/admin/agentes",      icon: "🧑‍💼", label: "Agentes"      },
+  { href: "/admin/alquileres",   icon: "📄", label: "Alquileres"   },
+  { href: "/admin/consultas",    icon: "📩", label: "Consultas"    },
+  { href: "/admin/usuarios",     icon: "👤", label: "Usuarios"     },
+  { href: "/admin/caja",         icon: "💰", label: "Caja"         },
+  { href: "/admin/auditoria",    icon: "📋", label: "Auditoría"    },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -47,7 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f4f4f5" }}>
 
-      {/* â”€â”€ SIDEBAR â”€â”€ */}
+      {/* ── SIDEBAR ── */}
       <aside style={{
         width: 220,
         background: "#2D3134",
@@ -64,7 +64,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             display: "flex", alignItems: "center", gap: 10,
             textDecoration: "none",
           }}>
-            <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, flexShrink: 0 }} />
+            <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
             <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>Pino Galant</span>
           </Link>
           <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,.35)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
@@ -120,12 +120,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             color: "rgba(255,255,255,.4)", fontSize: 13, fontWeight: 600,
             textDecoration: "none", padding: "8px 10px", borderRadius: 8, marginTop: 4,
           }}>
-            â†© Salir
+            ↩ Salir
           </Link>
         </div>
       </aside>
 
-      {/* â”€â”€ CONTENIDO â”€â”€ */}
+      {/* ── CONTENIDO ── */}
       <main style={{ marginLeft: 220, flex: 1, minWidth: 0 }}>
         {children}
       </main>

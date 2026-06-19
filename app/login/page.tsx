@@ -1,4 +1,4 @@
-﻿import { signInAction } from "@/app/auth/actions";
+import { signInAction } from "@/app/auth/actions";
 import GoogleSignInButton from "@/app/components/GoogleSignInButton.client";
 import Link from "next/link";
 
@@ -18,17 +18,17 @@ export default function LoginPage({
       <div style={{ textAlign: "center", marginBottom: 28 }}>
         <img src="/logo.png" alt="Pino Galant" style={{ width: 80, height: 80, objectFit: "contain" }} />
         <div style={{ marginTop: 10, fontWeight: 900, fontSize: 20, color: "#2D3134" }}>Pino Galant</div>
-        <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>IngresÃ¡ a tu cuenta</div>
+        <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>Ingresá a tu cuenta</div>
       </div>
 
       {searchParams?.error && (
         <div style={{ background: "#fff1f2", border: "1px solid #fecaca", color: "#b91c1c", padding: 14, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>
-          âŒ {decodeURIComponent(searchParams.error)}
+          ❌ {decodeURIComponent(searchParams.error)}
         </div>
       )}
       {searchParams?.ok && (
         <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", padding: 14, borderRadius: 12, marginBottom: 16, fontSize: 14 }}>
-          âœ… {decodeURIComponent(searchParams.ok)}
+          ✅ {decodeURIComponent(searchParams.ok)}
         </div>
       )}
 
@@ -40,7 +40,7 @@ export default function LoginPage({
         {/* Separador */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1, height: 1, background: "#eee" }} />
-          <span style={{ fontSize: 12, color: "#aaa", fontWeight: 600 }}>o ingresÃ¡ con email</span>
+          <span style={{ fontSize: 12, color: "#aaa", fontWeight: 600 }}>o ingresá con email</span>
           <div style={{ flex: 1, height: 1, background: "#eee" }} />
         </div>
 
@@ -52,7 +52,7 @@ export default function LoginPage({
             <input className="input" name="email" type="email" required autoComplete="email" />
           </div>
           <div>
-            <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>ContraseÃ±a</label>
+            <label className="small" style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Contraseña</label>
             <input className="input" name="password" type="password" required autoComplete="current-password" />
           </div>
           <button
@@ -69,7 +69,7 @@ export default function LoginPage({
         </form>
 
         <div className="small" style={{ textAlign: "center", color: "#888" }}>
-          Â¿No tenÃ©s cuenta?{" "}
+          ¿No tenés cuenta?{" "}
           <Link href="/registro?tipo=inquilino" style={{ color: "#B48A73", fontWeight: 700 }}>
             Registrarse
           </Link>

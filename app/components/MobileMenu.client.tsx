@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -23,22 +23,22 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
   }, [open]);
 
   const links = [
-    { href: "/propiedades",                  label: "Propiedades",    icon: "ðŸ " },
-    { href: "/propiedades?operation=venta",  label: "En venta",       icon: "ðŸ”‘" },
-    { href: "/propiedades?operation=alquiler", label: "En alquiler",  icon: "ðŸ“‹" },
-    { href: "/publicar",                     label: "Publicar",       icon: "ðŸ“¤" },
-    ...(isTenant ? [{ href: "/mi-alquiler",   label: "Mi alquiler",   icon: "ðŸ¡" }] : []),
-    ...(isOwner  ? [{ href: "/mi-propiedad", label: "Mi propiedad",  icon: "ðŸ¢" }] : []),
-    ...(isAdmin  ? [{ href: "/admin",         label: "Panel Agentes", icon: "âš™ï¸" }] : []),
+    { href: "/propiedades",                  label: "Propiedades",    icon: "🏠" },
+    { href: "/propiedades?operation=venta",  label: "En venta",       icon: "🔑" },
+    { href: "/propiedades?operation=alquiler", label: "En alquiler",  icon: "📋" },
+    { href: "/publicar",                     label: "Publicar",       icon: "📤" },
+    ...(isTenant ? [{ href: "/mi-alquiler",   label: "Mi alquiler",   icon: "🏡" }] : []),
+    ...(isOwner  ? [{ href: "/mi-propiedad", label: "Mi propiedad",  icon: "🏢" }] : []),
+    ...(isAdmin  ? [{ href: "/admin",         label: "Panel Agentes", icon: "⚙️" }] : []),
   ];
 
   return (
     <>
-      {/* BotÃ³n hamburguesa */}
+      {/* Botón hamburguesa */}
       <button
         onClick={() => setOpen(!open)}
         className="mobile-menu-btn"
-        aria-label="MenÃº"
+        aria-label="Menú"
         style={{
           display: "none",
           background: "none",
@@ -91,7 +91,7 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
               <button
                 onClick={() => setOpen(false)}
                 style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}
-              >âœ•</button>
+              >✕</button>
             </div>
 
             {/* Links */}
@@ -126,7 +126,7 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
                   borderRadius: 12, textDecoration: "none", fontWeight: 800, fontSize: 15,
                 }}
               >
-                ðŸ’¬ WhatsApp
+                💬 WhatsApp
               </a>
               {isLoggedIn ? (
                 <Link href="/perfil" onClick={() => setOpen(false)} style={{

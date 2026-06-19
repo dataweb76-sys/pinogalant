@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useRef, useState } from "react";
 
 type Phase = "welcome" | "playing" | "fadeout" | "done";
@@ -37,7 +37,7 @@ export default function VideoIntro() {
       pointerEvents: phase === "fadeout" ? "none" : "auto",
     }}>
 
-      {/* Video â€” centrado, no estirado */}
+      {/* Video — centrado, no estirado */}
       <video
         ref={videoRef}
         src="/pinogalant-intro.mp4"
@@ -66,9 +66,9 @@ export default function VideoIntro() {
           }}
         >
           {/* Logo real */}
-          <img src="/logo.png" alt="Pino Galant" style={{ width: 180, height: 180, marginBottom: 32 }} />
+          <img src="/logo.png" alt="Pino Galant" style={{ width: 180, height: 180, objectFit: "contain", marginBottom: 32 }} />
 
-          {/* BotÃ³n play */}
+          {/* Botón play */}
           <div style={{
             display: "flex", alignItems: "center", gap: 10,
             background: "#B48A73", color: "#fff",
@@ -79,12 +79,12 @@ export default function VideoIntro() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
-            TocÃ¡ para ingresar
+            Tocá para ingresar
           </div>
         </div>
       )}
 
-      {/* BotÃ³n saltar */}
+      {/* Botón saltar */}
       {phase === "playing" && (
         <button
           onClick={handleEnded}
@@ -96,7 +96,7 @@ export default function VideoIntro() {
             backdropFilter: "blur(4px)",
           }}
         >
-          Saltar â€º
+          Saltar ›
         </button>
       )}
     </div>

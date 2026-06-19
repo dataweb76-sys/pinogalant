@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import HeroSearch from "@/app/components/HeroSearch.client";
 import PropertiesMap from "@/app/components/PropertiesMap.client";
 import WhatsAppCTA from "@/app/components/WhatsAppCTA.client";
@@ -16,12 +16,12 @@ export const revalidate = 300;
 export const preferredRegion = ["gru1"];
 
 const CATEGORIES = [
-  { typeId: "3",  label: "Casas",        icon: "ðŸ " },
-  { typeId: "2",  label: "Departamentos", icon: "ðŸ¢" },
-  { typeId: "1",  label: "Terrenos",      icon: "ðŸ“" },
-  { typeId: "7",  label: "Locales",       icon: "ðŸª" },
-  { typeId: "4",  label: "Quintas",       icon: "ðŸŒ¾" },
-  { typeId: "9",  label: "Campos",        icon: "ðŸŒ¿" },
+  { typeId: "3",  label: "Casas",        icon: "🏠" },
+  { typeId: "2",  label: "Departamentos", icon: "🏢" },
+  { typeId: "1",  label: "Terrenos",      icon: "📐" },
+  { typeId: "7",  label: "Locales",       icon: "🏪" },
+  { typeId: "4",  label: "Quintas",       icon: "🌾" },
+  { typeId: "9",  label: "Campos",        icon: "🌿" },
 ];
 
 export default async function HomePage() {
@@ -62,13 +62,13 @@ export default async function HomePage() {
       {/* ===== HERO ===== */}
       <section className="hero-section">
         <div className="hero-inner">
-          <div className="hero-badge">âœ¦ Pino Galant Â· Servicios Inmobiliarios</div>
+          <div className="hero-badge">✦ Pino Galant · Servicios Inmobiliarios</div>
           <h1 className="hero-title">
-            EncontrÃ¡ tu prÃ³ximo hogar<br />
-            <span>con asesorÃ­a real.</span>
+            Encontrá tu próximo hogar<br />
+            <span>con asesoría real.</span>
           </h1>
           <p className="hero-subtitle">
-            MÃ¡s de 10 aÃ±os asesorando familias en la compra, venta y alquiler de propiedades en toda la regiÃ³n.
+            Más de 10 años asesorando familias en la compra, venta y alquiler de propiedades en toda la región.
           </p>
           <HeroSearch />
         </div>
@@ -81,19 +81,19 @@ export default async function HomePage() {
             <div style={{ marginBottom: 24 }}>
               <div className="section-tag">Ubicaciones</div>
               <h2 className="section-title">Propiedades en el mapa</h2>
-              <p className="section-subtitle">EncontrÃ¡ propiedades cerca de donde querÃ©s vivir.</p>
+              <p className="section-subtitle">Encontrá propiedades cerca de donde querés vivir.</p>
             </div>
             <PropertiesMap pins={mapPins} />
           </div>
         </section>
       )}
 
-      {/* ===== CATEGORÃAS ===== */}
+      {/* ===== CATEGORÍAS ===== */}
       <section className="categories-section">
         <div className="section-header">
-          <div className="section-tag">ExplorÃ¡ por categorÃ­a</div>
-          <h2 className="section-title">Â¿QuÃ© tipo de propiedad buscÃ¡s?</h2>
-          <p className="section-subtitle">Tenemos opciones para cada necesidad: compra, alquiler o inversiÃ³n.</p>
+          <div className="section-tag">Explorá por categoría</div>
+          <h2 className="section-title">¿Qué tipo de propiedad buscás?</h2>
+          <p className="section-subtitle">Tenemos opciones para cada necesidad: compra, alquiler o inversión.</p>
         </div>
         <div className="categories-grid">
           {CATEGORIES.map((cat) => (
@@ -114,11 +114,11 @@ export default async function HomePage() {
           <div className="featured-inner">
             <div className="featured-header">
               <div>
-                <div className="section-tag" style={{ textAlign: "left" }}>Desde Tokkobroker Â· en tiempo real</div>
+                <div className="section-tag" style={{ textAlign: "left" }}>Desde Tokkobroker · en tiempo real</div>
                 <h2 className="section-title" style={{ margin: 0 }}>Propiedades destacadas</h2>
               </div>
               <Link href="/propiedades" className="featured-header-link">
-                Ver todas las propiedades â†’
+                Ver todas las propiedades →
               </Link>
             </div>
             <div className="properties-grid">
@@ -136,7 +136,7 @@ export default async function HomePage() {
                           <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         ) : (
                           <div style={{ height: "100%", display: "grid", placeItems: "center", color: "#bbb" }}>
-                            <span style={{ fontSize: 36 }}>ðŸ </span>
+                            <span style={{ fontSize: 36 }}>🏠</span>
                           </div>
                         )}
                         <span style={{
@@ -155,7 +155,7 @@ export default async function HomePage() {
                         <div style={{ fontWeight: 800, fontSize: 15, lineHeight: 1.3, marginBottom: 4 }}>{p.address}</div>
                       </Link>
                       <div style={{ fontSize: 13, color: "#999", marginBottom: 10 }}>
-                        ðŸ“ {[loc.neighborhood, loc.city].filter(Boolean).join(", ") || "Santa Rosa, La Pampa"}
+                        📍 {[loc.neighborhood, loc.city].filter(Boolean).join(", ") || "Santa Rosa, La Pampa"}
                       </div>
                       {price && (
                         <div style={{ fontSize: 20, fontWeight: 900, color: "#2D3134" }}>
@@ -185,28 +185,28 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ===== QUIÃ‰NES SOMOS ===== */}
+      {/* ===== QUIÉNES SOMOS ===== */}
       <section className="about-section">
         <div className="about-inner">
           <div>
-            <div className="section-tag">QuiÃ©nes somos</div>
+            <div className="section-tag">Quiénes somos</div>
             <h2 className="about-title">
               Asesoramiento inmobiliario con experiencia y compromiso
             </h2>
             <p className="about-text">
-              En Pino Galant, nos dedicamos a acompaÃ±ar a cada cliente en uno de los momentos mÃ¡s importantes de su vida: la compra, venta o alquiler de una propiedad. Trabajamos con transparencia, profesionalismo y atenciÃ³n personalizada para que cada decisiÃ³n sea la correcta.
+              En Pino Galant, nos dedicamos a acompañar a cada cliente en uno de los momentos más importantes de su vida: la compra, venta o alquiler de una propiedad. Trabajamos con transparencia, profesionalismo y atención personalizada para que cada decisión sea la correcta.
             </p>
             <Link href="/propiedades" className="about-cta">
-              Ver propiedades disponibles â†’
+              Ver propiedades disponibles →
             </Link>
           </div>
           <div className="about-stats">
             <div className="stat-card">
               <div className="stat-number">10+</div>
-              <div className="stat-label">AÃ±os de experiencia</div>
+              <div className="stat-label">Años de experiencia</div>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{totalPublished > 0 ? totalPublished : "â€”"}</div>
+              <div className="stat-number">{totalPublished > 0 ? totalPublished : "—"}</div>
               <div className="stat-label">Propiedades disponibles</div>
             </div>
             <div className="stat-card">
@@ -227,7 +227,7 @@ export default async function HomePage() {
           <div className="hero-badge" style={{ display: "inline-flex", margin: "0 auto" }}>
             Hablemos hoy
           </div>
-          <h2 className="cta-title">Â¿TenÃ©s una propiedad o estÃ¡s buscando una?</h2>
+          <h2 className="cta-title">¿Tenés una propiedad o estás buscando una?</h2>
           <p className="cta-subtitle">
             Contactanos por WhatsApp y te respondemos en minutos. Sin vueltas.
           </p>
@@ -249,7 +249,7 @@ export default async function HomePage() {
               Pino Galant
             </Link>
             <p className="footer-tagline">
-              Servicios inmobiliarios profesionales. Compra, venta y alquiler de propiedades con asesorÃ­a personalizada en toda la regiÃ³n.
+              Servicios inmobiliarios profesionales. Compra, venta y alquiler de propiedades con asesoría personalizada en toda la región.
             </p>
           </div>
 
@@ -270,12 +270,12 @@ export default async function HomePage() {
             <ul className="footer-links">
               <li>
                 <a href="https://wa.me/549112345678" target="_blank" rel="noopener noreferrer">
-                  ðŸ’¬ WhatsApp
+                  💬 WhatsApp
                 </a>
               </li>
               <li>
                 <a href="mailto:info@pinogalant.com">
-                  âœ‰ï¸ info@pinogalant.com
+                  ✉️ info@pinogalant.com
                 </a>
               </li>
               <li><Link href="/publicar">Publicar propiedad</Link></li>
@@ -285,7 +285,7 @@ export default async function HomePage() {
         </div>
 
         <div className="footer-bottom">
-          <span>Â© 2025 Pino Galant Â· Todos los derechos reservados</span>
+          <span>© 2025 Pino Galant · Todos los derechos reservados</span>
           <span>Servicios inmobiliarios profesionales</span>
         </div>
       </footer>
