@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-const WA = process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP ?? "5492954228356";
+const WA = "5492954228356";
 
 const TIPOS = ["Casa", "Departamento", "Terreno", "Local comercial", "Oficina", "Quinta / Campo", "PH", "Otro"];
 const ZONAS = ["Centro", "Macrocentro", "Villa del Parque", "Avellaneda", "Castelar", "Barrio Norte", "Zona sur", "Zona norte", "Otro"];
