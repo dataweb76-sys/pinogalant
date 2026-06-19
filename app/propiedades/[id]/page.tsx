@@ -20,6 +20,48 @@ export const runtime = "nodejs";
 export const revalidate = 300;
 export const preferredRegion = ["gru1"];
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  try {
+    const p = await getTokkoProperty(params.id);
+    if (!p) return {};
+    const price = tokkoPrice(p);
+    const op = tokkoOperation(p);
+    const type = tokkoType(p);
+    const loc = tokkoLocation(p);
+    const priceStr = price
+      ? ` · ${price.currency === "USD" ? "USD" : "$"} ${price.amount.toLocaleString("es-AR")}`
+      : "";
+    const opStr = op === "venta" ? "en venta" : "en alquiler";
+    const locStr = [loc.neighborhood, loc.city].filter(Boolean).join(", ") || "Santa Rosa, La Pampa";
+    const title = `${type} ${opStr} en ${p.address}${priceStr}`;
+    const description = `${type} ${opStr} en ${locStr}. ${p.description?.slice(0, 140) ?? "Consultá con Pino Galant Inmobiliaria."}`;
+    const image = p.photos?.[0]?.image;
+
+    return {
+      title,
+      description,
+      keywords: [
+        `${type} ${opStr} ${locStr}`,
+        `${type} ${locStr}`,
+        `inmobiliaria ${locStr}`,
+        `propiedades ${opStr} La Pampa`,
+        "Pino Galant",
+      ],
+      openGraph: {
+        title,
+        description,
+        url: `https://pinogalant.com.ar/propiedades/${p.id}`,
+        images: image ? [{ url: image, width: 800, height: 600, alt: p.address }] : [],
+        type: "website",
+        locale: "es_AR",
+      },
+      alternates: { canonical: `https://pinogalant.com.ar/propiedades/${p.id}` },
+    };
+  } catch {
+    return {};
+  }
+}
+
 export async function generateStaticParams() {
   try {
     const props = await getAllTokkoProperties();

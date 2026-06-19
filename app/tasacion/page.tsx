@@ -1,6 +1,12 @@
 import TasacionForm from "./TasacionForm.client";
 
-export const metadata = { title: "Tasación online — Pino Galant" };
+export const metadata = {
+  title: "Tasación gratuita de propiedades en Santa Rosa, La Pampa",
+  description:
+    "Solicitá una tasación gratuita de tu propiedad en Santa Rosa y La Pampa. Nuestros agentes te dan un valor actualizado del mercado inmobiliario pampeano.",
+  keywords: ["tasación inmueble La Pampa", "valuar propiedad Santa Rosa", "cuánto vale mi casa La Pampa"],
+  alternates: { canonical: "https://pinogalant.com.ar/tasacion" },
+};
 
 export default function TasacionPage() {
   return (

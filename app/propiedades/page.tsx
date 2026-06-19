@@ -17,6 +17,19 @@ export const runtime = "nodejs";
 export const revalidate = 300;
 export const preferredRegion = ["gru1"];
 
+export const metadata = {
+  title: "Propiedades en venta y alquiler en Santa Rosa, La Pampa",
+  description:
+    "Explorá todas las propiedades disponibles: casas, departamentos, terrenos y campos en Santa Rosa y La Pampa. Filtrá por tipo, precio y operación.",
+  alternates: { canonical: "https://pinogalant.com.ar/propiedades" },
+  openGraph: {
+    title: "Propiedades en Santa Rosa, La Pampa | Pino Galant",
+    description: "Casas, departamentos, terrenos y campos en venta y alquiler en La Pampa.",
+    url: "https://pinogalant.com.ar/propiedades",
+    locale: "es_AR",
+  },
+};
+
 // ─── Tipos de propiedad Tokko (type.id) ──────────────────────────────────────
 const TYPE_OPTIONS = [
   { id: "3",  label: "Casa" },
