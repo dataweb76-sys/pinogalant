@@ -12,6 +12,7 @@ import {
   type TokkoProperty,
 } from "@/lib/tokko";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { BuscadorIA } from "./BuscadorIA.client";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -238,6 +239,11 @@ export default async function PropiedadesPage({
           <input type="hidden" name="page" value="1" />
           <Link href="/propiedades" className="btn" style={{ fontSize: 13 }}>Limpiar filtros</Link>
         </form>
+
+        {/* Buscador IA */}
+        <div style={{ marginTop: 12 }}>
+          <BuscadorIA />
+        </div>
       </div>
 
       {/* LISTADO */}
