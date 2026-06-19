@@ -6,7 +6,8 @@ type Settings = {
   imagesFit: "cover" | "contain";
 };
 
-export default function EditarPagina() {
+export default function EditarPagina({ role }: { role: string }) {
+  if (role !== "super_admin") return null;
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"hero" | "intro" | "video" | "imagenes">("hero");
   const [uploading, setUploading] = useState(false);

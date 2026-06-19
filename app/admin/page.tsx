@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
           {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
         <div style={{ marginTop: 16 }}>
-          <EditarPagina />
+          <EditarPagina role={profile?.role ?? ""} />
         </div>
       </div>
 
