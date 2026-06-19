@@ -82,15 +82,14 @@ export default function OficinaModal() {
               </div>
             </div>
 
-            {/* Mapa */}
+            {/* Mapa — OpenStreetMap, sin API key */}
             <div style={{ height: 260 }}>
               <iframe
                 title="Oficina Pino Galant"
-                src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${MAPS_QUERY}&zoom=16`}
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-64.2900%2C-36.6220%2C-64.2760%2C-36.6120&layer=mapnik&marker=-36.6167%2C-64.2833"
                 width="100%"
                 height="260"
                 style={{ border: 0, display: "block" }}
-                allowFullScreen
                 loading="lazy"
               />
             </div>

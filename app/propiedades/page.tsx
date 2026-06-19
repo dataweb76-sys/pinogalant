@@ -1,5 +1,6 @@
 import Link from "next/link";
 import WALeadButton from "@/app/components/WALeadButton.client";
+import ShareButton from "@/app/components/ShareButton.client";
 import PropiedadesVistaToggle from "@/app/components/PropiedadesVistaToggle.client";
 import AlertasPropiedades from "@/app/components/AlertasPropiedades.client";
 import {
@@ -328,7 +329,7 @@ export default async function PropiedadesPage({
                     )}
                   </div>
 
-                  <div style={{ padding: "0 14px 14px", display: "flex", gap: 8 }}>
+                  <div style={{ padding: "0 14px 14px", display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <Link href={`/propiedades/${p.id}`} style={{
                       flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
                       border: "1.5px solid #2D3134", color: "#2D3134",
@@ -360,6 +361,7 @@ export default async function PropiedadesPage({
                         </WALeadButton>
                       );
                     })()}
+                    <ShareButton propertyId={p.id} address={p.address} />
                   </div>
                 </article>
               );
