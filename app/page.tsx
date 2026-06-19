@@ -64,9 +64,9 @@ export default async function HomePage() {
   const localidadesPorProvincia: Record<string, Set<string>> = {};
   for (const p of allProps) {
     const parts = (p.location?.short_location ?? "").split("|").map(s => s.trim()).filter(Boolean);
-    // Tomar los últimos 2 segmentos como provincia y localidad
-    const provincia = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-    const localidad = parts.length >= 2 ? parts[parts.length - 1] : "";
+    // Formato Tokko: "Provincia | Localidad | Barrio" → parts[0]=provincia, parts[1]=localidad
+    const provincia = parts[0];
+    const localidad = parts[1] ?? "";
     if (!provincia) continue;
     if (!localidadesPorProvincia[provincia]) localidadesPorProvincia[provincia] = new Set();
     if (localidad) localidadesPorProvincia[provincia].add(localidad);
