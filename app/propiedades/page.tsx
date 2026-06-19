@@ -273,7 +273,7 @@ export default async function PropiedadesPage({
                   <Link href={`/propiedades/${p.id}`} style={{ display: "block", position: "relative" }}>
                     <div style={{ aspectRatio: "4/3", background: "#1a1c1e", overflow: "hidden", position: "relative" }}>
                       {cover ? (
-                        <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "fill" }} />
                       ) : (
                         <div style={{ height: "100%", display: "grid", placeItems: "center", color: "#bbb" }}>
                           <span style={{ fontSize: 36 }}>🏠</span>

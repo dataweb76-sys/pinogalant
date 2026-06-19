@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
-import path from "path";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-const ALLOWED = ["hero.jpg", "buscar-sonado.mp4"];
+const ALLOWED: Record<string, string> = {
+  "hero.jpg": "image/jpeg",
+  "buscar-sonado.mp4": "video/mp4",
+};
 
 export async function POST(req: NextRequest) {
-  // Verificar que sea admin
+  // Verificar admin
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -29,19 +30,28 @@ export async function POST(req: NextRequest) {
   const file = form.get("file") as File | null;
   const filePath = form.get("path") as string | null;
 
-  if (!file || !filePath) {
-    return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
-  }
-
-  if (!ALLOWED.includes(filePath)) {
+  if (!file || !filePath || !ALLOWED[filePath]) {
     return NextResponse.json({ error: "Archivo no permitido" }, { status: 400 });
   }
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const dest = path.join(process.cwd(), "public", filePath);
 
-  await writeFile(dest, buffer);
+  const { error: uploadError } = await admin.storage
+    .from("site-assets")
+    .upload(filePath, buffer, {
+      contentType: ALLOWED[filePath],
+      upsert: true,
+      cacheControl: "60",
+    });
 
-  return NextResponse.json({ ok: true, path: `/${filePath}` });
+  if (uploadError) {
+    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  }
+
+  const { data: urlData } = admin.storage
+    .from("site-assets")
+    .getPublicUrl(filePath);
+
+  return NextResponse.json({ ok: true, url: urlData.publicUrl });
 }

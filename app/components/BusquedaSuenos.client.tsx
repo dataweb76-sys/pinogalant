@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { getSiteAssetUrlDirect } from "@/lib/site-assets";
+
+const VIDEO_URL = getSiteAssetUrlDirect("buscar-sonado.mp4");
 
 export default function BusquedaSuenos() {
   const [popupOpen, setPopupOpen] = useState(false);
@@ -91,7 +94,7 @@ export default function BusquedaSuenos() {
             {/* Video */}
             <div style={{ position: "relative", background: "#000" }}>
               <video
-                src="/buscar-sonado.mp4"
+                src={VIDEO_URL}
                 autoPlay
                 playsInline
                 controls

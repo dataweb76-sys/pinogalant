@@ -11,6 +11,7 @@ import {
   tokkoType,
   tokkoLocation,
 } from "@/lib/tokko";
+import { getSiteAssetUrl } from "@/lib/site-assets";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -77,6 +78,8 @@ export default async function HomePage() {
     heroLocalidades[prov] = [...locs].sort();
   }
 
+  const heroImageUrl = await getSiteAssetUrl("hero.jpg", "/hero.jpg");
+
   const mapPins = allProps
     .filter((p) => p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0")
     .map((p) => {
@@ -102,7 +105,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ===== HERO ===== */}
-      <section className="hero-section">
+      <section className="hero-section" style={{ backgroundImage: `url('${heroImageUrl}')` }}>
         <div className="hero-inner">
           <h1 className="hero-title">
             Encontrá tu próximo hogar<br />
@@ -178,7 +181,7 @@ export default async function HomePage() {
                     <Link href={`/propiedades/${p.id}`} style={{ display: "block", position: "relative" }}>
                       <div style={{ aspectRatio: "4/3", background: "#1a1c1e", overflow: "hidden", position: "relative" }}>
                         {cover ? (
-                          <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "fill" }} />
                         ) : (
                           <div style={{ height: "100%", display: "grid", placeItems: "center", color: "#bbb" }}>
                             <span style={{ fontSize: 36 }}>🏠</span>

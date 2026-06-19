@@ -15,13 +15,14 @@ export default function EditarPagina() {
   const heroInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  async function uploadFile(file: File, path: string) {
+  async function uploadFile(file: File, assetPath: string) {
     const form = new FormData();
     form.append("file", file);
-    form.append("path", path);
+    form.append("path", assetPath);
     const res = await fetch("/api/admin/upload-asset", { method: "POST", body: form });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? res.statusText);
+    return json;
   }
 
   async function handleHero(e: React.ChangeEvent<HTMLInputElement>) {
@@ -30,10 +31,13 @@ export default function EditarPagina() {
     setUploading(true); setError(""); setSuccess("");
     try {
       await uploadFile(file, "hero.jpg");
-      setSuccess("✓ Imagen del hero actualizada. Los cambios se ven en el sitio en 1-2 minutos.");
+      setSuccess("✓ Imagen del hero actualizada en Supabase. Recargá el sitio para verla.");
     } catch (err: any) {
       setError("Error al subir: " + err.message);
-    } finally { setUploading(false); }
+    } finally {
+      setUploading(false);
+      if (heroInputRef.current) heroInputRef.current.value = "";
+    }
   }
 
   async function handleVideo(e: React.ChangeEvent<HTMLInputElement>) {
@@ -42,10 +46,13 @@ export default function EditarPagina() {
     setUploading(true); setError(""); setSuccess("");
     try {
       await uploadFile(file, "buscar-sonado.mp4");
-      setSuccess("✓ Video del popup actualizado. Los cambios se ven en el sitio en 1-2 minutos.");
+      setSuccess("✓ Video actualizado en Supabase. Recargá el sitio para verlo.");
     } catch (err: any) {
       setError("Error al subir: " + err.message);
-    } finally { setUploading(false); }
+    } finally {
+      setUploading(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
   }
 
   function close() { setOpen(false); setSuccess(""); setError(""); }
