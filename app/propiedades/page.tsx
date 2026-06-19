@@ -29,6 +29,12 @@ const TYPE_OPTIONS = [
   { id: "19", label: "Rancho" },
 ];
 
+const BADGE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  valor_ajustado: { label: "💰 Valor ajustado", color: "#fff", bg: "#16a34a" },
+  permuta:        { label: "🔄 Permuta",         color: "#fff", bg: "#7c3aed" },
+  reservado:      { label: "🔒 Reservado",        color: "#fff", bg: "#dc2626" },
+};
+
 function fmt(n: number, currency: string) {
   if (currency === "USD") return `USD ${n.toLocaleString("es-AR")}`;
   return `$ ${n.toLocaleString("es-AR")}`;
@@ -65,13 +71,13 @@ export default async function PropiedadesPage({
   let all: TokkoProperty[] = [];
   let agentPhones: Record<number, string> = {};
   let agentNames: Record<number, string> = {};
+  let badgesPorProp: Record<number, string> = {};
   try {
     const admin = createSupabaseAdminClient();
-    const [props, { data: assignments }] = await Promise.all([
+    const [props, { data: assignments }, { data: extras }] = await Promise.all([
       getAllTokkoProperties(),
-      admin
-        .from("tokko_agent_assignments")
-        .select("tokko_id, agents(name, phone)"),
+      admin.from("tokko_agent_assignments").select("tokko_id, agents(name, phone)"),
+      admin.from("property_extras").select("tokko_id, badge"),
     ]);
     all = props;
     (assignments ?? []).forEach((a: any) => {
@@ -79,6 +85,9 @@ export default async function PropiedadesPage({
       const name = a.agents?.name;
       if (phone) agentPhones[a.tokko_id] = phone;
       if (name) agentNames[a.tokko_id] = name;
+    });
+    (extras ?? []).forEach((e: any) => {
+      if (e.badge) badgesPorProp[e.tokko_id] = e.badge;
     });
   } catch (e) {
     console.error("Fetch error:", e);
@@ -237,6 +246,7 @@ export default async function PropiedadesPage({
               const cover = tokkoCover(p);
               const type  = tokkoType(p);
               const loc   = tokkoLocation(p);
+              const badge = badgesPorProp[p.id] ? BADGE_LABELS[badgesPorProp[p.id]] : null;
               return (
                 <article key={p.id} className="prop-card">
                   <Link href={`/propiedades/${p.id}`} style={{ display: "block", position: "relative" }}>
@@ -256,6 +266,17 @@ export default async function PropiedadesPage({
                       }}>
                         {op === "venta" ? "Venta" : "Alquiler"}
                       </span>
+                      {badge && (
+                        <span style={{
+                          position: "absolute", top: 12, right: 12,
+                          background: badge.bg, color: badge.color,
+                          fontSize: 11, fontWeight: 800,
+                          padding: "4px 12px", borderRadius: 999,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        }}>
+                          {badge.label}
+                        </span>
+                      )}
                       {p.photos.length > 1 && (
                         <span style={{
                           position: "absolute", bottom: 10, right: 10,

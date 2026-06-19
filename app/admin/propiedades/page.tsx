@@ -22,11 +22,21 @@ export default async function AdminPropiedadesPage() {
     getAllTokkoProperties().catch(() => []),
     admin.from("tokko_agent_assignments").select("tokko_id, agents(id, name, phone)"),
     admin.from("whatsapp_leads").select("property_id, created_at").order("created_at", { ascending: false }),
-    admin.from("property_extras").select("tokko_id, video_url"),
+    admin.from("property_extras").select("tokko_id, video_url, badge"),
   ]);
 
   const videosPorProp: Record<number, string> = {};
-  (extras ?? []).forEach((e: any) => { if (e.video_url) videosPorProp[e.tokko_id] = e.video_url; });
+  const badgesPorProp: Record<number, string> = {};
+  (extras ?? []).forEach((e: any) => {
+    if (e.video_url) videosPorProp[e.tokko_id] = e.video_url;
+    if (e.badge) badgesPorProp[e.tokko_id] = e.badge;
+  });
+
+  const BADGE_LABELS: Record<string, string> = {
+    valor_ajustado: "💰 Valor ajustado",
+    permuta: "🔄 Permuta",
+    reservado: "🔒 Reservado",
+  };
 
   // Agente por propiedad
   const agentePorProp: Record<number, { name: string; phone: string }> = {};
@@ -162,13 +172,24 @@ export default async function AdminPropiedadesPage() {
                     )}
                   </td>
 
-                  {/* Video */}
+                  {/* Extras */}
                   <td style={{ padding: "14px 16px" }}>
                     <Link href={`/admin/propiedades/${p.id}/video`}
-                      style={{ fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap",
+                      style={{ fontSize: 12, fontWeight: 700, textDecoration: "none", display: "block", marginBottom: 4,
                         color: videosPorProp[p.id] ? "#25D366" : "#B48A73" }}>
-                      {videosPorProp[p.id] ? "✓ Con video" : "+ Video"}
+                      {videosPorProp[p.id] ? "✓ Video" : "+ Video"}
                     </Link>
+                    {badgesPorProp[p.id] ? (
+                      <Link href={`/admin/propiedades/${p.id}/video`}
+                        style={{ fontSize: 11, fontWeight: 700, textDecoration: "none", color: "#7c3aed" }}>
+                        {BADGE_LABELS[badgesPorProp[p.id]]}
+                      </Link>
+                    ) : (
+                      <Link href={`/admin/propiedades/${p.id}/video`}
+                        style={{ fontSize: 11, fontWeight: 600, textDecoration: "none", color: "#ccc" }}>
+                        + Cartel
+                      </Link>
+                    )}
                   </td>
 
                   {/* Ver */}

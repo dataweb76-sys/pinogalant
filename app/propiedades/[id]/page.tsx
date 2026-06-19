@@ -45,17 +45,25 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
   const photos  = p.photos ?? [];
 
   // Agente + extras (video URL)
+  const BADGE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+    valor_ajustado: { label: "💰 Valor ajustado", color: "#fff", bg: "#16a34a" },
+    permuta:        { label: "🔄 Permuta",         color: "#fff", bg: "#7c3aed" },
+    reservado:      { label: "🔒 Reservado",        color: "#fff", bg: "#dc2626" },
+  };
+
   let agent: { name: string; phone: string; photo: string | null; position: string } | null = null;
   let videoUrl: string | null = null;
+  let badgeKey: string | null = null;
   try {
     const admin = createSupabaseAdminClient();
     const [assignmentRes, extrasRes] = await Promise.all([
       admin.from("tokko_agent_assignments").select("agents(name, phone, photo_url, position)").eq("tokko_id", p.id).maybeSingle(),
-      admin.from("property_extras").select("video_url").eq("tokko_id", p.id).maybeSingle(),
+      admin.from("property_extras").select("video_url, badge").eq("tokko_id", p.id).maybeSingle(),
     ]);
     const a = (assignmentRes.data as any)?.agents;
     if (a) agent = { name: a.name, phone: a.phone ?? "", photo: a.photo_url ?? null, position: a.position ?? "Agente" };
     videoUrl = extrasRes.data?.video_url ?? null;
+    badgeKey = extrasRes.data?.badge ?? null;
   } catch {}
 
   if (!agent && p.producer) {
@@ -108,6 +116,11 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             <span style={{ background: "#F3EDE7", color: "#B48A73", fontSize: 11, fontWeight: 800, padding: "4px 14px", borderRadius: 999 }}>
               {type}
             </span>
+            {badgeKey && BADGE_LABELS[badgeKey] && (
+              <span style={{ background: BADGE_LABELS[badgeKey].bg, color: BADGE_LABELS[badgeKey].color, fontSize: 11, fontWeight: 800, padding: "4px 14px", borderRadius: 999 }}>
+                {BADGE_LABELS[badgeKey].label}
+              </span>
+            )}
           </div>
 
           <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 900, letterSpacing: -0.5 }}>
