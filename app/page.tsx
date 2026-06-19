@@ -25,6 +25,19 @@ const CATEGORIES = [
   { typeId: "9",  label: "Campos",        icon: "🌿" },
 ];
 
+// Etiquetas para el buscador hero (más descriptivas)
+const TYPE_LABELS: Record<string, string> = {
+  "3": "Casa",
+  "2": "Departamento",
+  "4": "Quinta",
+  "9": "Campos y Chacras",
+  "1": "Terrenos",
+  "7": "Local comercial",
+  "8": "Fondo de comercio",
+  "13": "Condo",
+  "19": "Rancho",
+};
+
 export default async function HomePage() {
   let allProps = [] as Awaited<ReturnType<typeof getAllTokkoProperties>>;
   try { allProps = await getAllTokkoProperties(); } catch {}
@@ -37,6 +50,32 @@ export default async function HomePage() {
     acc[id] = (acc[id] || 0) + 1;
     return acc;
   }, {});
+
+  // ── Datos dinámicos para el buscador ─────────────────────────────────────
+  // Tipos que tienen al menos 1 propiedad cargada
+  const typeIdsPresentes = [...new Set(allProps.map(p => String(p.type?.id ?? "")))].filter(Boolean);
+  const heroTypes = typeIdsPresentes
+    .filter(id => TYPE_LABELS[id])
+    .map(id => ({ id, label: TYPE_LABELS[id] }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  // Provincias y localidades extraídas de location.short_location
+  // Formato Tokko: "País | Provincia | Localidad" o "Provincia | Localidad"
+  const localidadesPorProvincia: Record<string, Set<string>> = {};
+  for (const p of allProps) {
+    const parts = (p.location?.short_location ?? "").split("|").map(s => s.trim()).filter(Boolean);
+    // Tomar los últimos 2 segmentos como provincia y localidad
+    const provincia = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+    const localidad = parts.length >= 2 ? parts[parts.length - 1] : "";
+    if (!provincia) continue;
+    if (!localidadesPorProvincia[provincia]) localidadesPorProvincia[provincia] = new Set();
+    if (localidad) localidadesPorProvincia[provincia].add(localidad);
+  }
+  const heroProvincias = Object.keys(localidadesPorProvincia).sort();
+  const heroLocalidades: Record<string, string[]> = {};
+  for (const [prov, locs] of Object.entries(localidadesPorProvincia)) {
+    heroLocalidades[prov] = [...locs].sort();
+  }
 
   const mapPins = allProps
     .filter((p) => p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0")
@@ -72,7 +111,11 @@ export default async function HomePage() {
           <p className="hero-subtitle">
             Más de 10 años asesorando familias en la compra, venta y alquiler de propiedades en toda la región.
           </p>
-          <HeroSearch />
+          <HeroSearch
+            types={heroTypes}
+            provincias={heroProvincias}
+            localidadesPorProvincia={heroLocalidades}
+          />
         </div>
       </section>
 
