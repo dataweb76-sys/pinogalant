@@ -7,350 +7,237 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-/* ===================== STATUS / PRIORIDAD ===================== */
-
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending: { label: "Nuevo", color: "#2563eb" },
-  in_progress: { label: "Warm", color: "#ca8a04" },
-  hot: { label: "Hot", color: "#dc2626" },
-  closed: { label: "Cerrado", color: "#16a34a" },
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_MAP[status] ?? {
-    label: status,
-    color: "#6b7280",
-  };
-
-  return (
-    <span
-      style={{
-        padding: "4px 10px",
-        borderRadius: 999,
-        background: s.color,
-        color: "white",
-        fontWeight: 700,
-        fontSize: 12,
-      }}
-    >
-      {s.label}
-    </span>
-  );
-}
-
-/* ===================== HELPERS ===================== */
-
-function buildReplyMessage({
-  name,
-  property,
-  agent,
-}: {
-  name: string;
-  property?: {
-    title?: string | null;
-    city?: string | null;
-    neighborhood?: string | null;
-  } | null;
-  agent?: string | null;
-}) {
-  return encodeURIComponent(
-    `Hola ${name}, soy ${agent ?? "el equipo de Pino Galant"}.
-
-Te escribo por tu consulta sobre la propiedad:
-${property?.title ?? "Propiedad"} – ${property?.neighborhood ?? ""} ${property?.city ?? ""}
-
-Quedo atento/a para ayudarte.`
-  );
-}
-
-/* ===================== PAGE ===================== */
-
 export default async function AdminConsultasPage({
   searchParams,
 }: {
-  searchParams?: {
-    status?: string;
-  };
+  searchParams?: { tab?: string };
 }) {
-  /* ---------- AUTH ---------- */
   const supabase = await createSupabaseServerClient();
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes.user;
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) redirect("/login?next=/admin/consultas");
 
-  if (!user) redirect("/login?next=/admin/consultas");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, full_name")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile || !["admin", "super_admin", "agent"].includes(profile.role)) {
-    redirect("/");
-  }
-
-  const isAdmin = profile.role === "admin" || profile.role === "super_admin";
-
-  /* ---------- DATA ---------- */
   const admin = createSupabaseAdminClient();
+  const { data: profile } = await admin
+    .from("profiles").select("role, full_name").eq("id", data.user.id).maybeSingle();
 
-  const status = searchParams?.status || "all";
+  if (!["admin", "super_admin", "agent"].includes(profile?.role ?? "")) redirect("/");
 
-  let query = admin
+  const tab = searchParams?.tab ?? "wa";
+
+  // WA Leads
+  const { data: waLeads } = await admin
+    .from("whatsapp_leads")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  // Consultas formulario
+  const { data: formLeads } = await admin
     .from("property_inquiries")
-    .select(
-      `
-      id,
-      property_id,
-      agent_id,
-      name,
-      email,
-      phone,
-      message,
-      status,
-      internal_notes,
-      created_at,
-      properties (
-        id,
-        title,
-        city,
-        neighborhood,
-        agent_id
-      )
-    `
-    )
-    .order("created_at", { ascending: false });
+    .select("id, name, email, phone, message, status, created_at, property_id")
+    .order("created_at", { ascending: false })
+    .limit(100);
 
-  // 👉 filtro por estado SOLO si corresponde
-  if (status && status !== "all") {
-    query = query.eq("status", status);
-  }
+  const ahora = Date.now();
+  const ayer = ahora - 86400000;
 
-  // 👉 vista "Mis consultas" para agentes
-  if (!isAdmin) {
-    query = query.eq("agent_id", user.id);
-  }
-
-  const { data: inquiries } = await query;
-
-  /* ===================== ACTIONS ===================== */
-
-  async function markInProgress(formData: FormData) {
-    "use server";
-    const admin = createSupabaseAdminClient();
-    await admin
-      .from("property_inquiries")
-      .update({ status: "in_progress" })
-      .eq("id", String(formData.get("id")));
-  }
-
-  async function closeInquiry(formData: FormData) {
-    "use server";
-    const admin = createSupabaseAdminClient();
-    await admin
-      .from("property_inquiries")
-      .update({
-        status: "closed",
-        resolved_at: new Date().toISOString(),
-      })
-      .eq("id", String(formData.get("id")));
-  }
-
-  async function saveNotes(formData: FormData) {
-    "use server";
-    const admin = createSupabaseAdminClient();
-    await admin
-      .from("property_inquiries")
-      .update({
-        internal_notes: String(formData.get("internal_notes") || ""),
-      })
-      .eq("id", String(formData.get("id")));
-  }
-
-  async function setPriority(formData: FormData) {
-    "use server";
-    const admin = createSupabaseAdminClient();
-    await admin
-      .from("property_inquiries")
-      .update({
-        status: String(formData.get("status")),
-      })
-      .eq("id", String(formData.get("id")));
-  }
-
-  /* ===================== UI ===================== */
+  const waHoy = (waLeads ?? []).filter((l: any) => new Date(l.created_at).getTime() > ayer).length;
+  const formHoy = (formLeads ?? []).filter((l: any) => new Date(l.created_at).getTime() > ayer).length;
 
   return (
-    <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px" }}>
-      <h1 style={{ marginBottom: 20 }}>
-        {isAdmin ? "Consultas" : "Mis consultas"}
-      </h1>
+    <div style={{ padding: "32px 28px", maxWidth: 1100 }}>
 
-      {/* FILTROS */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
-        {["all", "pending", "in_progress", "hot", "closed"].map((s) => (
-          <Link
-            key={s}
-            href={`/admin/consultas?status=${s}`}
-            className="btn"
-            style={{
-              fontWeight: s === status ? 900 : 600,
-            }}
-          >
-            {s === "all" ? "Todas" : STATUS_MAP[s]?.label ?? s}
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 12, color: "#B48A73", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+          Gestión de leads
+        </div>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "#2D3134" }}>Consultas</h1>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        {[
+          { id: "wa",   label: `WhatsApp (${(waLeads ?? []).length})`,  hoy: waHoy   },
+          { id: "form", label: `Formulario (${(formLeads ?? []).length})`, hoy: formHoy },
+        ].map(t => (
+          <Link key={t.id} href={`/admin/consultas?tab=${t.id}`} style={{
+            padding: "8px 18px", borderRadius: 10, fontWeight: 700, fontSize: 14,
+            textDecoration: "none",
+            background: tab === t.id ? "#2D3134" : "#fff",
+            color: tab === t.id ? "#fff" : "#888",
+            border: "1px solid " + (tab === t.id ? "#2D3134" : "#eee"),
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            {t.label}
+            {t.hoy > 0 && (
+              <span style={{ background: "#f59e0b", color: "#fff", fontSize: 10,
+                fontWeight: 900, padding: "2px 7px", borderRadius: 999 }}>
+                {t.hoy} hoy
+              </span>
+            )}
           </Link>
         ))}
       </div>
 
-      {/* LISTADO */}
-      <div style={{ display: "grid", gap: 16 }}>
-        {inquiries?.map((i: any) => {
-          const replyMessage = buildReplyMessage({
-            name: i.name || "Usuario",
-            property: i.properties,
-            agent: profile.full_name ?? null,
-          });
-
-          const whatsappHref = i.phone
-            ? `https://wa.me/${i.phone.replace(/\D/g, "")}?text=${replyMessage}`
-            : null;
-
-          const mailHref = `mailto:${i.email}?subject=${encodeURIComponent(
-            "Consulta por propiedad"
-          )}&body=${replyMessage}`;
-
-          return (
-            <div
-              key={i.id}
-              style={{
-                border: "1px solid #e5e7eb",
-                borderRadius: 16,
-                padding: 16,
-                background: "white",
-              }}
-            >
-              {/* HEADER */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                  marginBottom: 8,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 800 }}>
-                    {i.name || "Usuario"}
-                  </div>
-                  <div style={{ fontSize: 13, opacity: 0.7 }}>
-                    {i.email}
-                    {i.phone && <> · {i.phone}</>}
-                  </div>
-                </div>
-
-                <StatusBadge status={i.status} />
-              </div>
-
-              {/* PROPIEDAD */}
-              <div style={{ fontSize: 14, marginBottom: 10 }}>
-                <strong>{i.properties?.title}</strong>
-                <br />
-                {i.properties?.neighborhood} · {i.properties?.city}
-                <br />
-                <Link
-                  href={`/propiedades/${i.properties?.id}`}
-                  className="small"
-                >
-                  Ver propiedad →
-                </Link>
-              </div>
-
-              {/* MENSAJE */}
-              <div
-                style={{
-                  fontSize: 14,
-                  background: "#f9fafb",
-                  padding: 12,
-                  borderRadius: 10,
-                  marginBottom: 12,
-                }}
-              >
-                {i.message}
-              </div>
-
-              {/* NOTAS INTERNAS */}
-              {isAdmin && (
-                <form action={saveNotes} style={{ marginBottom: 12 }}>
-                  <input type="hidden" name="id" value={i.id} />
-                  <textarea
-                    name="internal_notes"
-                    defaultValue={i.internal_notes ?? ""}
-                    placeholder="Notas internas (solo staff)"
-                    className="input"
-                    rows={2}
-                  />
-                  <button className="btn" style={{ marginTop: 6 }}>
-                    Guardar nota
-                  </button>
-                </form>
+      {/* WA Leads */}
+      {tab === "wa" && (
+        <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 16, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f8f8f8" }}>
+                {["Visitante", "Teléfono", "Propiedad", "Agente contactado", "Fecha"].map((h, i) => (
+                  <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
+                    color: "#888", letterSpacing: 0.5, textTransform: "uppercase",
+                    borderBottom: "1px solid #eee" }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(waLeads ?? []).map((l: any, i: number, arr: any[]) => {
+                const esReciente = new Date(l.created_at).getTime() > ayer;
+                return (
+                  <tr key={l.id} style={{
+                    borderBottom: i < arr.length - 1 ? "1px solid #f3f3f3" : "none",
+                    background: esReciente ? "rgba(245,158,11,0.04)" : undefined,
+                  }}>
+                    <td style={{ padding: "12px 16px" }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                        {l.visitor_name ?? "Anónimo"}
+                        {esReciente && (
+                          <span style={{ fontSize: 9, background: "#fef3c7", color: "#92400e",
+                            padding: "2px 6px", borderRadius: 999, fontWeight: 800 }}>NUEVO</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>
+                        {l.source === "property_detail" ? "Detalle" : "Listado"}
+                      </div>
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {l.visitor_phone ? (
+                        <a href={`https://wa.me/${l.visitor_phone.replace(/\D/g,"")}`}
+                          target="_blank"
+                          style={{ color: "#25D366", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
+                          📱 {l.visitor_phone}
+                        </a>
+                      ) : (
+                        <span style={{ color: "#ccc", fontSize: 12 }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {l.property_address ? (
+                        <Link href={`/propiedades/${l.property_id}`} target="_blank"
+                          style={{ fontSize: 13, fontWeight: 600, color: "#2D3134", textDecoration: "none" }}>
+                          {l.property_address}
+                        </Link>
+                      ) : (
+                        <span style={{ color: "#ccc", fontSize: 12 }}>General</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{l.agent_name ?? "—"}</div>
+                      {l.agent_phone && (
+                        <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{l.agent_phone}</div>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#aaa", whiteSpace: "nowrap" }}>
+                      {new Date(l.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                      <br />
+                      {new Date(l.created_at).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                  </tr>
+                );
+              })}
+              {(waLeads ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#aaa", fontSize: 14 }}>
+                    Sin consultas de WhatsApp registradas
+                  </td>
+                </tr>
               )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-              {/* ACCIONES */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {i.status === "pending" && (
-                  <form action={markInProgress}>
-                    <input type="hidden" name="id" value={i.id} />
-                    <button className="btn">En seguimiento</button>
-                  </form>
-                )}
-
-                {i.status !== "closed" && (
-                  <form action={closeInquiry}>
-                    <input type="hidden" name="id" value={i.id} />
-                    <button className="btn btnPrimary">Cerrar</button>
-                  </form>
-                )}
-
-                {whatsappHref && (
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    className="btn btnPrimary"
-                  >
-                    WhatsApp
-                  </a>
-                )}
-
-                <a
-                  href={mailHref}
-                  target="_blank"
-                  className="btn"
-                >
-                  Mail
-                </a>
-
-                {isAdmin && (
-                  <form action={setPriority}>
-                    <input type="hidden" name="id" value={i.id} />
-                    <select
-                      name="status"
-                      defaultValue={i.status}
-                      className="input"
-                    >
-                      <option value="pending">Nuevo</option>
-                      <option value="in_progress">Warm</option>
-                      <option value="hot">Hot</option>
-                      <option value="closed">Cerrado</option>
-                    </select>
-                    <button className="btn">Actualizar</button>
-                  </form>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </main>
+      {/* Formulario leads */}
+      {tab === "form" && (
+        <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 16, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f8f8f8" }}>
+                {["Nombre", "Contacto", "Mensaje", "Estado", "Fecha"].map((h, i) => (
+                  <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
+                    color: "#888", letterSpacing: 0.5, textTransform: "uppercase",
+                    borderBottom: "1px solid #eee" }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(formLeads ?? []).map((l: any, i: number, arr: any[]) => {
+                const esReciente = new Date(l.created_at).getTime() > ayer;
+                const statusColors: Record<string, string> = {
+                  pending: "#2563eb", in_progress: "#ca8a04", hot: "#dc2626", closed: "#16a34a"
+                };
+                const statusLabels: Record<string, string> = {
+                  pending: "Nuevo", in_progress: "Warm", hot: "Hot", closed: "Cerrado"
+                };
+                return (
+                  <tr key={l.id} style={{
+                    borderBottom: i < arr.length - 1 ? "1px solid #f3f3f3" : "none",
+                    background: esReciente ? "rgba(37,99,235,0.03)" : undefined,
+                  }}>
+                    <td style={{ padding: "12px 16px" }}>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{l.name ?? "—"}</div>
+                      {l.property_id && (
+                        <Link href={`/propiedades/${l.property_id}`} target="_blank"
+                          style={{ fontSize: 11, color: "#B48A73", textDecoration: "none" }}>
+                          Ver propiedad →
+                        </Link>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {l.email && <div style={{ fontSize: 12 }}>{l.email}</div>}
+                      {l.phone && (
+                        <a href={`https://wa.me/${l.phone.replace(/\D/g,"")}`} target="_blank"
+                          style={{ fontSize: 12, color: "#25D366", textDecoration: "none" }}>
+                          📱 {l.phone}
+                        </a>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#555", maxWidth: 250 }}>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box",
+                        WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any }}>
+                        {l.message ?? "—"}
+                      </div>
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <span style={{ background: statusColors[l.status] ?? "#999", color: "#fff",
+                        fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 999 }}>
+                        {statusLabels[l.status] ?? l.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#aaa", whiteSpace: "nowrap" }}>
+                      {new Date(l.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                    </td>
+                  </tr>
+                );
+              })}
+              {(formLeads ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#aaa", fontSize: 14 }}>
+                    Sin consultas de formulario
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }

@@ -2,336 +2,184 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import {
-  createPropertyAction,
-  deletePropertyAction,
-  togglePublishAction,
-} from "./actions";
-import RowActions from "./row-actions.client";
+import { getAllTokkoProperties } from "@/lib/tokko";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-type Role = "owner" | "admin" | "super_admin";
-
-export default async function AdminPropertiesPage({
-  searchParams,
-}: {
-  searchParams?: {
-    ok?: string;
-    error?: string;
-    q?: string;
-    city?: string;
-    operation?: string;
-    type?: string;
-    published?: string; // all | 1 | 0 | revision
-  };
-}) {
+export default async function AdminPropiedadesPage() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/login?next=/admin/propiedades");
 
   const admin = createSupabaseAdminClient();
+  const { data: profile } = await admin
+    .from("profiles").select("role").eq("id", data.user.id).maybeSingle();
 
-  const me = await admin
-    .from("profiles")
-    .select("id, role")
-    .eq("id", data.user.id)
-    .maybeSingle();
+  if (!["admin", "super_admin"].includes(profile?.role ?? "")) redirect("/");
 
-  const myRole = (me.data?.role as Role | undefined) ?? "owner";
-  if (myRole !== "admin" && myRole !== "super_admin") {
-    redirect("/admin?error=not_admin");
-  }
+  const [tokkoProps, { data: assignments }, { data: waLeads }] = await Promise.all([
+    getAllTokkoProperties().catch(() => []),
+    admin.from("tokko_agent_assignments").select("tokko_id, agents(id, name, phone)"),
+    admin.from("whatsapp_leads").select("property_id, created_at").order("created_at", { ascending: false }),
+  ]);
 
-  // ---------- Filtros ----------
-  const q = (searchParams?.q ?? "").trim();
-  const fCity = (searchParams?.city ?? "").trim();
-  const fOperation = (searchParams?.operation ?? "").trim();
-  const fType = (searchParams?.type ?? "").trim();
-  const fPublished = (searchParams?.published ?? "all").trim(); // 👈 CLAVE
-
-  // ---------- Query base ----------
-  let query = admin
-    .from("properties")
-    .select(
-      "id,title,city,neighborhood,operation,type,purpose,property_type,price_ars,price_usd,is_published,status,agent_id,created_at"
-    )
-    .order("created_at", { ascending: false });
-
-  /**
-   * 🔑 FILTRO POR AGENTE
-   * - Admin normal:
-   *   - Ve SUS propiedades
-   *   - EXCEPTO cuando está en “revisión”
-   * - Super admin: ve todo
-   */
-  if (myRole !== "super_admin" && fPublished !== "revision") {
-    query = query.eq("agent_id", data.user.id);
-  }
-
-  // ---------- Filtros ----------
-  if (q) query = query.ilike("title", `%${q}%`);
-  if (fCity) query = query.ilike("city", `%${fCity}%`);
-  if (fOperation) query = query.eq("operation", fOperation);
-  if (fType) query = query.eq("type", fType);
-
-  /**
-   * 🔥 FILTRO DE PUBLICACIÓN (NO SE PISAN)
-   */
-  if (fPublished === "1") {
-    query = query.eq("is_published", true);
-  }
-
-  if (fPublished === "0") {
-    query = query.eq("is_published", false);
-  }
-
-  if (fPublished === "revision") {
-    query = query.eq("status", "en_revision");
-  }
-  // published === "all" → NO se filtra nada
-
-  const propsRes = await query;
-  const rows = propsRes.data ?? [];
-
-  // ---------- Operaciones y tipos ----------
-  const opVals = await admin.rpc("enum_values", {
-    enum_name: "property_operation",
-  });
-  const typeVals = await admin.rpc("enum_values", {
-    enum_name: "property_type",
+  // Agente por propiedad
+  const agentePorProp: Record<number, { name: string; phone: string }> = {};
+  (assignments ?? []).forEach((a: any) => {
+    if (a.agents) agentePorProp[a.tokko_id] = { name: a.agents.name, phone: a.agents.phone };
   });
 
-  const operations: string[] = Array.isArray(opVals.data)
-    ? (opVals.data as string[])
-    : [];
-  const types: string[] = Array.isArray(typeVals.data)
-    ? (typeVals.data as string[])
-    : [];
-
-  // ---------- Foto principal ----------
-  const ids = rows.map((r) => r.id);
-  const mediaMap = new Map<string, string>();
-
-  if (ids.length > 0) {
-    const mediaRes = await admin
-      .from("property_media")
-      .select("property_id, kind, url, sort_order, created_at")
-      .in("property_id", ids)
-      .eq("kind", "image")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
-
-    const media = mediaRes.data ?? [];
-    for (const m of media) {
-      if (!mediaMap.has(m.property_id)) {
-        mediaMap.set(m.property_id, m.url);
-      }
+  // Consultas WA por propiedad
+  const consultasPorProp: Record<number, { total: number; ultima: string }> = {};
+  (waLeads ?? []).forEach((l: any) => {
+    if (!l.property_id) return;
+    if (!consultasPorProp[l.property_id]) {
+      consultasPorProp[l.property_id] = { total: 0, ultima: l.created_at };
     }
-  }
+    consultasPorProp[l.property_id].total++;
+  });
 
-  // ---------- Agentes ----------
-  const agentsRes =
-    myRole === "super_admin"
-      ? await admin
-          .from("profiles")
-          .select("id, role, full_name, email")
-          .order("created_at", { ascending: true })
-      : { data: [] as any[] };
-
-  const agentLabel = new Map<string, string>();
-  for (const a of agentsRes.data ?? []) {
-    const label = a.full_name
-      ? a.full_name
-      : a.email
-      ? a.email
-      : `${String(a.id).slice(0, 8)}...`;
-    agentLabel.set(a.id, `${label} (${a.role})`);
-  }
+  const ahora = Date.now();
+  const ayer = ahora - 86400000;
 
   return (
-    <div style={{ padding: 24, display: "grid", gap: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <h1 style={{ margin: 0 }}>Propiedades</h1>
-        <span className="small" style={{ color: "#666" }}>
-          {myRole === "super_admin"
-            ? "Viendo: todas"
-            : "Viendo: asignadas a mí"}
-        </span>
-
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Link className="btn" href="/admin">← Panel</Link>
-          <Link
-            href="/admin/propiedades/nueva"
-            style={{
-              background: "#2D3134", color: "#fff", textDecoration: "none",
-              padding: "8px 18px", borderRadius: 10, fontWeight: 700, fontSize: 14,
-              display: "flex", alignItems: "center", gap: 6,
-            }}
-          >
-            + Nueva propiedad
-          </Link>
+    <div style={{ padding: "32px 28px", maxWidth: 1100 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <div style={{ fontSize: 12, color: "#B48A73", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+            Tokko Broker
+          </div>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "#2D3134" }}>
+            Propiedades ({tokkoProps.length})
+          </h1>
         </div>
+        <Link href="/admin/agentes" style={{
+          background: "#2D3134", color: "#fff", textDecoration: "none",
+          padding: "10px 20px", borderRadius: 10, fontWeight: 700, fontSize: 14,
+        }}>
+          Gestionar agentes →
+        </Link>
       </div>
 
-      {/* Filtros rápidos */}
-      <section className="card" style={{ padding: 16 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "all" })}>
-            Todas
-          </Link>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "1" })}>
-            Publicadas
-          </Link>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "0" })}>
-            No publicadas
-          </Link>
-          <Link className="btn" href={buildBackLink({ ...searchParams, published: "revision" })}>
-            En revisión
-          </Link>
-        </div>
-      </section>
+      <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 16, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: "#f8f8f8" }}>
+              {["Propiedad", "Tipo / Operación", "Precio", "Agente asignado", "Consultas WA", ""].map((h, i) => (
+                <th key={i} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
+                  color: "#888", letterSpacing: 0.5, textTransform: "uppercase",
+                  borderBottom: "1px solid #eee" }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tokkoProps.map((p: any, i: number) => {
+              const agente = agentePorProp[p.id];
+              const consultas = consultasPorProp[p.id];
+              const tieneAlerta = consultas && new Date(consultas.ultima).getTime() > ayer;
+              const foto = p.photos?.[0]?.image ?? null;
 
-      {/* LISTADO (NO TOCADO) */}
-      <section className="card" style={{ padding: 16 }}>
-        <h2 style={{ marginTop: 0 }}>Listado</h2>
-
-        <div style={{ overflowX: "auto" }}>
-  <table
-    style={{
-      width: "100%",
-      borderCollapse: "collapse",
-      minWidth: 900,
-    }}
-  >
-            <thead>
-              <tr>
-                <th style={th}>Foto</th>
-                <th style={th}>Título</th>
-                <th style={th}>Operación</th>
-                <th style={th}>Tipo</th>
-                <th style={th}>Ubicación</th>
-                <th style={th}>Precio</th>
-                <th style={th}>Estado</th>
-                {myRole === "super_admin" ? <th style={th}>Agente</th> : null}
-                <th style={th}>Acciones</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((r) => {
-                const img = mediaMap.get(r.id) ?? null;
-                const price = formatPrice(r.price_ars, r.price_usd);
-                const back = buildBackLink(searchParams);
-
-                return (
-                  <tr key={r.id}>
-                    <td style={td}>
-                      {img ? (
-                        <img
-                          src={img}
-                          alt=""
-                          style={{ width: 70, height: 52, objectFit: "cover", borderRadius: 8 }}
-                        />
+              return (
+                <tr key={p.id} style={{
+                  borderBottom: i < tokkoProps.length - 1 ? "1px solid #f3f3f3" : "none",
+                  background: tieneAlerta ? "rgba(245,158,11,0.03)" : undefined,
+                }}>
+                  {/* Propiedad */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      {foto ? (
+                        <img src={foto} alt="" style={{ width: 56, height: 42, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
                       ) : (
-                        <span className="small">sin foto</span>
+                        <div style={{ width: 56, height: 42, borderRadius: 8, background: "#f3f3f3", flexShrink: 0, display: "grid", placeItems: "center", fontSize: 18 }}>🏠</div>
                       )}
-                    </td>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13, maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {p.address ?? `Propiedad #${p.id}`}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>{p.location?.name ?? ""}</div>
+                      </div>
+                    </div>
+                  </td>
 
-                    <td style={td}>
-                      <Link href={`/admin/propiedades/${r.id}`}>
-                        <b>{r.title}</b>
+                  {/* Tipo / Operación */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <div style={{ fontSize: 12, color: "#555" }}>
+                      {p.type?.name ?? "—"}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>
+                      {p.operations?.map((o: any) => o.operation_type === 1 ? "Venta" : "Alquiler").join(" · ") ?? "—"}
+                    </div>
+                  </td>
+
+                  {/* Precio */}
+                  <td style={{ padding: "14px 16px", fontSize: 13, fontWeight: 700, color: "#2D3134", whiteSpace: "nowrap" }}>
+                    {p.operations?.[0]?.prices?.[0]
+                      ? `${p.operations[0].prices[0].currency === 2 ? "USD" : "ARS"} ${Number(p.operations[0].prices[0].price).toLocaleString("es-AR")}`
+                      : "—"}
+                  </td>
+
+                  {/* Agente */}
+                  <td style={{ padding: "14px 16px" }}>
+                    {agente ? (
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13 }}>{agente.name}</div>
+                        <a href={`https://wa.me/${agente.phone?.replace(/\D/g,"")}` }
+                          target="_blank" style={{ fontSize: 11, color: "#25D366", textDecoration: "none", fontWeight: 600 }}>
+                          📱 {agente.phone}
+                        </a>
+                      </div>
+                    ) : (
+                      <Link href="/admin/agentes" style={{ fontSize: 12, color: "#B48A73", fontWeight: 700, textDecoration: "none" }}>
+                        + Asignar agente
                       </Link>
-                    </td>
+                    )}
+                  </td>
 
-                    <td style={td}>{r.operation ?? "-"}</td>
-                    <td style={td}>{r.type ?? "-"}</td>
-                    <td style={td}>
-                      {r.city}
-                      {r.neighborhood ? `, ${r.neighborhood}` : ""}
-                    </td>
-                    <td style={td}>{price}</td>
-                    <td style={td}>
-                      {r.status === "en_revision"
-                        ? "🕓 En revisión"
-                        : r.is_published
-                        ? "✅ Publicada"
-                        : "— No publicada"}
-                    </td>
+                  {/* Consultas WA */}
+                  <td style={{ padding: "14px 16px" }}>
+                    {consultas ? (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ background: tieneAlerta ? "#fef3c7" : "#F3EDE7",
+                            color: tieneAlerta ? "#92400e" : "#B48A73",
+                            fontWeight: 800, fontSize: 12, padding: "3px 10px", borderRadius: 999 }}>
+                            {consultas.total} {tieneAlerta ? "⚡" : ""}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 10, color: "#aaa", marginTop: 3 }}>
+                          Última: {new Date(consultas.ultima).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                        </div>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 12, color: "#ccc" }}>Sin consultas</span>
+                    )}
+                  </td>
 
-                    {myRole === "super_admin" ? (
-                      <td style={td}>
-                        {r.agent_id
-                          ? agentLabel.get(r.agent_id)
-                          : "-"}
-                      </td>
-                    ) : null}
-
-                    <td style={td}>
-                      <RowActions
-                        id={r.id}
-                        isPublished={!!r.is_published}
-                        next={back}
-                        canDelete={myRole === "super_admin"}
-                        onTogglePublish={togglePublishAction}
-                        onDelete={deletePropertyAction}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {rows.length === 0 && (
-                <tr>
-                  <td style={td} colSpan={9}>
-                    No hay propiedades con esos filtros.
+                  {/* Ver */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <Link href={`/propiedades/${p.id}`} target="_blank"
+                      style={{ fontSize: 12, color: "#B48A73", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+                      Ver →
+                    </Link>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              );
+            })}
+
+            {tokkoProps.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ padding: 40, textAlign: "center", color: "#aaa", fontSize: 14 }}>
+                  No se pudieron cargar las propiedades de Tokko
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
-
-/* utils */
-
-function buildBackLink(sp?: Record<string, string | undefined>) {
-  const params = new URLSearchParams();
-  Object.entries(sp ?? {}).forEach(([k, v]) => {
-    if (typeof v === "string" && v.length) params.set(k, v);
-  });
-  const s = params.toString();
-  return s ? `/admin/propiedades?${s}` : "/admin/propiedades";
-}
-
-function formatPrice(ars?: number | null, usd?: number | null) {
-  const parts: string[] = [];
-  if (ars != null) parts.push(`ARS ${fmt(ars)}`);
-  if (usd != null) parts.push(`USD ${fmt(usd)}`);
-  return parts.length ? parts.join(" · ") : "-";
-}
-
-function fmt(n: number) {
-  try {
-    return new Intl.NumberFormat("es-AR").format(n);
-  } catch {
-    return String(n);
-  }
-}
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  fontSize: 12,
-  color: "#666",
-  borderBottom: "1px solid #eee",
-  padding: "10px 8px",
-};
-
-const td: React.CSSProperties = {
-  borderBottom: "1px solid #f1f1f1",
-  padding: "10px 8px",
-  fontSize: 14,
-};

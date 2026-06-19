@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import GallerySlider from "./GallerySlider";
+import WALeadButton from "@/app/components/WALeadButton.client";
 import {
   getTokkoProperty,
   getAllTokkoProperties,
@@ -66,7 +67,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
   const rawPhone = agent?.phone?.replace(/\D/g, "") ?? "";
   const waNumber = rawPhone.startsWith("54") ? rawPhone
     : rawPhone ? `54${rawPhone}`
-    : process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP;
+    : process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP ?? "";
   const waMsg = encodeURIComponent(`Hola${agent ? ` ${agent.name.split(" ")[0]}` : ""}! Vi la propiedad en ${p.address} y me interesa. ¿Podés contarme más?`);
 
   const hasGeo = p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0";
@@ -183,18 +184,22 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                   <div style={{ fontSize: 13, color: "#888" }}>Pino Galant</div>
                 </div>
               </div>
-              <a
-                href={`https://wa.me/${waNumber}?text=${waMsg}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <WALeadButton
+                waNumber={waNumber}
+                waMsg={waMsg}
+                propertyId={p.id}
+                propertyAddress={p.address}
+                agentName={agent.name}
+                agentPhone={agent.phone}
+                source="property_detail"
                 style={{
-                  display: "block", textAlign: "center", padding: "13px 0",
+                  display: "block", width: "100%", textAlign: "center", padding: "13px 0",
                   borderRadius: 12, background: "#25D366", color: "#fff",
-                  fontWeight: 800, textDecoration: "none", fontSize: 15,
+                  fontWeight: 800, fontSize: 15, cursor: "pointer", border: "none",
                 }}
               >
                 💬 Consultar por WhatsApp
-              </a>
+              </WALeadButton>
             </div>
           )}
 

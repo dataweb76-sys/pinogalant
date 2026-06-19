@@ -8,14 +8,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const NAV_ITEMS = [
-  { href: "/admin",              icon: "▦",  label: "Dashboard"    },
-  { href: "/admin/propiedades",  icon: "🏠", label: "Propiedades"  },
-  { href: "/admin/agentes",      icon: "🧑‍💼", label: "Agentes"      },
-  { href: "/admin/alquileres",   icon: "📄", label: "Alquileres"   },
-  { href: "/admin/consultas",    icon: "📩", label: "Consultas"    },
-  { href: "/admin/usuarios",     icon: "👤", label: "Usuarios"     },
-  { href: "/admin/caja",         icon: "💰", label: "Caja"         },
-  { href: "/admin/auditoria",    icon: "📋", label: "Auditoría"    },
+  { href: "/admin",             icon: "▦",  label: "Dashboard"   },
+  { href: "/admin/propiedades", icon: "🏠", label: "Propiedades" },
+  { href: "/admin/agentes",     icon: "🧑‍💼", label: "Agentes"     },
+  { href: "/admin/consultas",   icon: "📩", label: "Consultas"   },
+  { href: "/admin/auditoria",   icon: "📋", label: "Auditoría"   },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

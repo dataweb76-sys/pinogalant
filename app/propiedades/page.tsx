@@ -1,4 +1,5 @@
 import Link from "next/link";
+import WALeadButton from "@/app/components/WALeadButton.client";
 import {
   getAllTokkoProperties,
   tokkoPrice,
@@ -61,18 +62,21 @@ export default async function PropiedadesPage({
   // ── Fetch propiedades + asignaciones en paralelo ────────────────────────
   let all: TokkoProperty[] = [];
   let agentPhones: Record<number, string> = {};
+  let agentNames: Record<number, string> = {};
   try {
     const admin = createSupabaseAdminClient();
     const [props, { data: assignments }] = await Promise.all([
       getAllTokkoProperties(),
       admin
         .from("tokko_agent_assignments")
-        .select("tokko_id, agents(phone)"),
+        .select("tokko_id, agents(name, phone)"),
     ]);
     all = props;
     (assignments ?? []).forEach((a: any) => {
       const phone = a.agents?.phone;
+      const name = a.agents?.name;
       if (phone) agentPhones[a.tokko_id] = phone;
+      if (name) agentNames[a.tokko_id] = name;
     });
   } catch (e) {
     console.error("Fetch error:", e);
@@ -272,17 +276,22 @@ export default async function PropiedadesPage({
                       const num = wa.startsWith("54") ? wa : `54${wa}`;
                       const msg = encodeURIComponent(`Hola! Me interesa la propiedad en ${p.address}. ¿Podés darme más información?`);
                       return (
-                        <a
-                          href={`https://wa.me/${num}?text=${msg}`}
-                          target="_blank" rel="noopener noreferrer"
+                        <WALeadButton
+                          waNumber={num}
+                          waMsg={msg}
+                          propertyId={p.id}
+                          propertyAddress={p.address}
+                          agentName={agentNames[p.id]}
+                          agentPhone={agentPhones[p.id]}
+                          source="property_card"
                           style={{
                             flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
-                            background: "#25D366", color: "#fff",
-                            textDecoration: "none", fontWeight: 700, fontSize: 14,
+                            background: "#25D366", color: "#fff", border: "none",
+                            fontWeight: 700, fontSize: 14, cursor: "pointer",
                           }}
                         >
                           WhatsApp
-                        </a>
+                        </WALeadButton>
                       );
                     })()}
                   </div>
