@@ -1,6 +1,5 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu.client";
-import HeaderChat from "./HeaderChat.client";
 import WhatsAppButton from "./WhatsAppButton.client";
 
 type HeaderUser = {
@@ -36,9 +35,6 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
           <span className="hide-xs">Pino Galant</span>
         </Link>
-
-        {/* CHAT — entre logo y nav */}
-        <HeaderChat />
 
         {/* NAV — solo desktop */}
         <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 2 }}>
