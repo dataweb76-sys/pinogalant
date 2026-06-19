@@ -68,16 +68,16 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} style={{
             position: "absolute", top: 14, right: 14,
             background: "rgba(255,255,255,0.12)", border: "none",
-            color: "#fff", width: 30, height: 30, borderRadius: "50%",
+            color: "#fff", width: 30, height: 30,
             cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center",
           }}>Ã—</button>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <img src="/logo.svg" alt="Pino Galant" style={{ width: 52, height: 52, flexShrink: 0 }} />
+            <img src="/logo.png" alt="Pino Galant" style={{ width: 52, height: 52, flexShrink: 0 }} />
             <div>
               <div style={{ color: "#fff", fontWeight: 800, fontSize: 17, lineHeight: 1.2 }}>Pino Galant</div>
               <div style={{ color: "rgba(255,255,255,.6)", fontSize: 12, marginTop: 2 }}>Negocios Inmobiliarios</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: isBusinessHours() ? "#4ade80" : "#f59e0b", display: "block" }} />
+                <span style={{ width: 8, height: 8, background: isBusinessHours() ? "#4ade80" : "#f59e0b", display: "block" }} />
                 <span style={{ color: "rgba(255,255,255,.7)", fontSize: 11 }}>
                   {isBusinessHours() ? "En lÃ­nea Â· Lun a SÃ¡b 9 a 20 hs" : "Fuera de horario Â· Lun a SÃ¡b 9 a 20 hs"}
                 </span>
