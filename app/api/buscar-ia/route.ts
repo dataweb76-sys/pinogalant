@@ -29,27 +29,31 @@ Ejemplo de respuesta:
 {"op":"venta","type":"3","price_max":100000}`;
 
 export async function POST(req: Request) {
-  const { query } = await req.json();
-  if (!query?.trim()) {
-    return NextResponse.json({ error: "query requerida" }, { status: 400 });
-  }
-
-  const message = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 256,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: query.trim() }],
-  });
-
-  const text = message.content[0].type === "text" ? message.content[0].text : "";
-
-  let filters: Record<string, string> = {};
   try {
-    filters = JSON.parse(text);
-  } catch {
-    // Si Claude no devolvió JSON válido, devolver objeto vacío
-    filters = {};
-  }
+    const { query } = await req.json();
+    if (!query?.trim()) {
+      return NextResponse.json({ error: "query requerida" }, { status: 400 });
+    }
 
-  return NextResponse.json(filters);
+    const message = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 256,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: query.trim() }],
+    });
+
+    const text = message.content[0].type === "text" ? message.content[0].text : "";
+
+    let filters: Record<string, string> = {};
+    try {
+      filters = JSON.parse(text);
+    } catch {
+      filters = {};
+    }
+
+    return NextResponse.json(filters);
+  } catch (e: any) {
+    console.error("buscar-ia error:", e);
+    return NextResponse.json({ error: e?.message ?? "error interno" }, { status: 500 });
+  }
 }

@@ -23,17 +23,21 @@ export default function BusquedaSuenos() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
       });
-      const filters = await res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        setError(`Error: ${data?.error ?? res.status}`);
+        return;
+      }
       const params = new URLSearchParams();
-      if (filters.op) params.set("op", filters.op);
-      if (filters.type) params.set("type", filters.type);
-      if (filters.price_min) params.set("price_min", String(filters.price_min));
-      if (filters.price_max) params.set("price_max", String(filters.price_max));
-      if (filters.q) params.set("q", filters.q);
+      if (data.op) params.set("op", data.op);
+      if (data.type) params.set("type", data.type);
+      if (data.price_min) params.set("price_min", String(data.price_min));
+      if (data.price_max) params.set("price_max", String(data.price_max));
+      if (data.q) params.set("q", data.q);
       closePopup();
       window.location.href = `/propiedades?${params.toString()}`;
-    } catch {
-      setError("No se pudo procesar. Intentá de nuevo.");
+    } catch (e: any) {
+      setError(`Error: ${e?.message ?? "desconocido"}`);
     } finally {
       setLoading(false);
     }
@@ -89,9 +93,8 @@ export default function BusquedaSuenos() {
               <video
                 src="/buscar-sonado.mp4"
                 autoPlay
-                muted
-                loop
                 playsInline
+                controls
                 style={{ width: "100%", display: "block", maxHeight: 300, objectFit: "cover" }}
               />
               <button
