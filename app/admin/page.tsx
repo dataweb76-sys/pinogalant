@@ -2,8 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getAllTokkoProperties, tokkoOperation, tokkoType, tokkoPrice } from "@/lib/tokko";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,11 +20,11 @@ export default async function AdminDashboard() {
 
   if (!["admin", "super_admin"].includes(profile?.role ?? "")) redirect("/");
 
-  // Datos en paralelo
-  const [tokkoProps, { data: waLeads }, { data: assignments }] = await Promise.all([
-    getAllTokkoProperties().catch(() => []),
+  // Solo Supabase — sin llamada a Tokko para que cargue rápido
+  const [{ data: waLeads }, { data: assignments }, { count: totalPropsCount }] = await Promise.all([
     admin.from("whatsapp_leads").select("*").order("created_at", { ascending: false }).limit(20),
     admin.from("tokko_agent_assignments").select("tokko_id, agents(name, phone)"),
+    admin.from("tokko_agent_assignments").select("*", { count: "exact", head: true }),
   ]);
 
   // Consultas por propiedad
@@ -42,7 +40,7 @@ export default async function AdminDashboard() {
   });
 
   // Stats
-  const totalProps = tokkoProps.length;
+  const totalProps = totalPropsCount ?? 0;
   const totalConsultas = (waLeads ?? []).length;
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const consultasHoy = (waLeads ?? []).filter((l: any) => new Date(l.created_at) >= hoy).length;
@@ -131,15 +129,15 @@ export default async function AdminDashboard() {
               .sort(([,a],[,b]) => b - a)
               .slice(0, 5)
               .map(([propId, count], i, arr) => {
-                const prop = tokkoProps.find(p => p.id === Number(propId));
                 const agente = agentePorProp[Number(propId)] ?? "Sin asignar";
+                const address = (waLeads ?? []).find((l: any) => l.property_id === Number(propId))?.property_address;
                 return (
                   <Link key={propId} href={`/propiedades/${propId}`} target="_blank"
                     style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
                       padding: "13px 18px", textDecoration: "none", color: "inherit",
                       borderBottom: i < arr.length - 1 ? "1px solid #f3f3f3" : "none" }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13 }}>{prop?.address ?? `Propiedad #${propId}`}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{address ?? `Propiedad #${propId}`}</div>
                       <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>Agente: {agente}</div>
                     </div>
                     <span style={{ background: "#F3EDE7", color: "#B48A73", fontWeight: 800,
