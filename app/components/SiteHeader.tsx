@@ -42,6 +42,7 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
             { href: "/propiedades",                   label: "Propiedades" },
             { href: "/propiedades?operation=venta",   label: "Venta" },
             { href: "/propiedades?operation=alquiler", label: "Alquiler" },
+            { href: "/tasacion",                      label: "Tasación" },
             { href: "/publicar",                      label: "Publicar" },
           ].map(link => (
             <Link key={link.href} href={link.href} style={{

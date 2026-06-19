@@ -1,5 +1,7 @@
 import Link from "next/link";
 import WALeadButton from "@/app/components/WALeadButton.client";
+import PropiedadesVistaToggle from "@/app/components/PropiedadesVistaToggle.client";
+import AlertasPropiedades from "@/app/components/AlertasPropiedades.client";
 import {
   getAllTokkoProperties,
   tokkoPrice,
@@ -138,12 +140,33 @@ export default async function PropiedadesPage({
 
       {/* HERO FILTROS */}
       <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 18, padding: "18px 16px", marginBottom: 16 }}>
-        <h1 style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>
-          Propiedades disponibles
-        </h1>
-        <p style={{ margin: "0 0 14px", color: "#888", fontSize: 13 }}>
-          {total} propiedad{total !== 1 ? "es" : ""} · Santa Rosa, La Pampa
-        </p>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 2 }}>
+          <div>
+            <h1 style={{ margin: "0 0 2px", fontSize: 22, fontWeight: 900, letterSpacing: -0.5 }}>
+              Propiedades disponibles
+            </h1>
+            <p style={{ margin: "0 0 14px", color: "#888", fontSize: 13 }}>
+              {total} propiedad{total !== 1 ? "es" : ""} · Santa Rosa, La Pampa
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+            <AlertasPropiedades />
+            <PropiedadesVistaToggle pins={filtered
+            .filter(p => p.geo_lat && p.geo_long && p.geo_lat !== "0" && p.geo_long !== "0")
+            .map(p => {
+              const pr = tokkoPrice(p);
+              const op = tokkoOperation(p);
+              return {
+                id: p.id,
+                address: p.address,
+                lat: parseFloat(p.geo_lat),
+                lng: parseFloat(p.geo_long),
+                price: pr ? `${pr.currency === "USD" ? "USD" : "$"} ${pr.amount.toLocaleString("es-AR")}` : undefined,
+                op,
+              };
+            })
+          } />
+        </div>
 
         <style>{`
           .filtros-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }

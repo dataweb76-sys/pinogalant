@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import GallerySlider from "./GallerySlider";
 import WALeadButton from "@/app/components/WALeadButton.client";
+import MortgageCalc from "@/app/components/MortgageCalc.client";
+import PropiedadesSimilares from "@/app/components/PropiedadesSimilares";
 import {
   getTokkoProperty,
   getAllTokkoProperties,
@@ -218,11 +220,20 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             </form>
           </div>
 
+          {/* Calculadora hipotecaria — solo en ventas */}
+          {op === "venta" && price && (
+            <MortgageCalc priceUSD={price.currency === "USD" ? price.amount : undefined} />
+          )}
+
           <Link href="/propiedades" className="btn" style={{ textAlign: "center" }}>
             ← Volver al listado
           </Link>
         </div>
       </div>
+
+      {/* Propiedades similares */}
+      <PropiedadesSimilares currentId={p.id} operation={op} typeId={p.type?.id ?? 0} />
+
     </main>
   );
 }
