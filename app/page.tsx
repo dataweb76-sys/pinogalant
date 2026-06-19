@@ -214,7 +214,7 @@ export default async function HomePage() {
                         border: "1.5px solid #2D3134", color: "#2D3134",
                         textDecoration: "none", fontWeight: 700, fontSize: 13,
                       }}>Ver detalle</Link>
-                      <a href={`https://wa.me/${process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP}?text=${encodeURIComponent(`Hola! Me interesa la propiedad en ${p.address}.`)}`}
+                      <a href={`https://wa.me/${(p.producer?.cellphone || p.producer?.phone || process.env.NEXT_PUBLIC_OFFLINE_WHATSAPP || "").replace(/\D/g, "")}?text=${encodeURIComponent(`Hola! Me interesa la propiedad en ${p.address}.`)}`}
                         target="_blank" rel="noopener noreferrer"
                         style={{
                           flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10,
