@@ -1,6 +1,7 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { saveAgentAction, assignAgentAction, syncAssignmentsAction } from "./actions";
+import { createBrowserClient } from "@/lib/supabase/browser";
 
 type Agent = {
   id: string; tokko_id: number | null; name: string;
@@ -21,12 +22,45 @@ export default function AgentesClient({
   const [localAssign, setLocalAssign] = useState<Record<number, string>>(assignments);
   const [msg, setMsg] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photoUrl, setPhotoUrl] = useState<string>("");
 
   const BRONCE = "#B48A73";
 
   function flash(m: string) { setMsg(m); setTimeout(() => setMsg(""), 3000); }
 
+  function openEditing(a: Agent) {
+    setEditing(a);
+    setPhotoPreview(a.photo_url ?? null);
+    setPhotoUrl(a.photo_url ?? "");
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Preview local inmediato
+    setPhotoPreview(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const supabase = createBrowserClient();
+      const ext = file.name.split(".").pop();
+      const path = `agents/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      setPhotoUrl(data.publicUrl);
+    } catch (err: any) {
+      flash("Error subiendo imagen: " + (err.message ?? err));
+      setPhotoPreview(editing?.photo_url ?? null);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function handleSaveAgent(fd: FormData) {
+    fd.set("photo_url", photoUrl);
     startTransition(async () => {
       const res = await saveAgentAction(fd);
       if (res.ok) { flash("✓ Agente guardado"); setEditing(null); location.reload(); }
@@ -65,7 +99,7 @@ export default function AgentesClient({
             style={{ padding: "9px 16px", borderRadius: 10, border: "1.5px solid #ddd", background: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
             🔄 Sincronizar desde Tokko
           </button>
-          <button onClick={() => setEditing({ id: "", tokko_id: null, name: "", email: "", phone: "", photo_url: "", position: "Agente", is_active: true })}
+          <button onClick={() => openEditing({ id: "", tokko_id: null, name: "", email: "", phone: "", photo_url: "", position: "Agente", is_active: true })}
             style={{ padding: "9px 16px", borderRadius: 10, background: BRONCE, color: "#fff", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
             + Nuevo agente
           </button>
@@ -114,7 +148,7 @@ export default function AgentesClient({
               <div style={{ fontSize: 12, color: "#aaa", marginBottom: 12 }}>
                 {tokkoProps.filter(p => localAssign[p.id] === a.id).length} propiedades asignadas
               </div>
-              <button onClick={() => setEditing(a)} style={{
+              <button onClick={() => openEditing(a)} style={{
                 width: "100%", padding: "8px 0", borderRadius: 8,
                 border: `1.5px solid ${BRONCE}`, color: BRONCE,
                 background: "none", cursor: "pointer", fontWeight: 700, fontSize: 13,
@@ -187,9 +221,40 @@ export default function AgentesClient({
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#666" }}>Email</label>
                 <input className="input" name="email" type="email" defaultValue={editing.email ?? ""} style={{ marginTop: 4, width: "100%", boxSizing: "border-box" }} />
               </div>
+              {/* Foto de perfil */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#666" }}>URL foto de perfil</label>
-                <input className="input" name="photo_url" defaultValue={editing.photo_url ?? ""} placeholder="https://..." style={{ marginTop: 4, width: "100%", boxSizing: "border-box" }} />
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#666" }}>Foto de perfil</label>
+                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 14 }}>
+                  {/* Preview */}
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F3EDE7",
+                    overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center", fontSize: 26,
+                    border: "2px solid #eee" }}>
+                    {photoPreview
+                      ? <img src={photoPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : "👤"}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={handleFileChange}
+                    />
+                    <button type="button" onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      style={{ padding: "8px 16px", borderRadius: 8, border: "1.5px solid #ddd",
+                        background: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 13,
+                        width: "100%" }}>
+                      {uploading ? "Subiendo…" : photoPreview ? "Cambiar foto" : "Subir foto"}
+                    </button>
+                    {photoUrl && (
+                      <div style={{ fontSize: 11, color: "#aaa", marginTop: 4, wordBreak: "break-all" }}>
+                        ✓ Imagen subida
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input type="checkbox" name="is_active" id="is_active" defaultChecked={editing.is_active} />
