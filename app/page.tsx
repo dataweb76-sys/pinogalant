@@ -54,6 +54,8 @@ export default async function HomePage() {
           : "Consultar precio",
         op,
         url: `/propiedades/${p.id}`,
+        type: tokkoType(p),
+        photo: p.photos?.[0]?.image ?? undefined,
       };
     });
 
