@@ -270,7 +270,7 @@ export default async function PropiedadesPage({
               return (
                 <article key={p.id} className="prop-card">
                   <Link href={`/propiedades/${p.id}`} style={{ display: "block", position: "relative" }}>
-                    <div style={{ aspectRatio: "4/3", background: "#f3f4f6", overflow: "hidden", position: "relative" }}>
+                    <div style={{ aspectRatio: "4/3", background: "#1a1c1e", overflow: "hidden", position: "relative" }}>
                       {cover ? (
                         <img src={cover} alt={p.address} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                       ) : (
