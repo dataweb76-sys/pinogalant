@@ -13,6 +13,13 @@ type MapPin = {
   photo?: string;
 };
 
+const TYPE_TRANSLATE: Record<string, string> = {
+  "Countryside": "Campo", "Ranch": "Rancho", "Condo": "Condominio",
+  "Bussiness Premises": "Local", "Business Premises": "Local",
+  "House": "Casa", "Apartment": "Departamento", "Land": "Terreno",
+  "Office": "Oficina", "Warehouse": "Depósito",
+};
+
 const TYPE_ICONS: Record<string, { emoji: string; color: string }> = {
   "Casa":         { emoji: "🏠", color: "#1e6b3c" },
   "Departamento": { emoji: "🏢", color: "#1565C0" },
@@ -20,12 +27,20 @@ const TYPE_ICONS: Record<string, { emoji: string; color: string }> = {
   "Local":        { emoji: "🏪", color: "#E65100" },
   "Quinta":       { emoji: "🌳", color: "#558B2F" },
   "Campo":        { emoji: "🌾", color: "#c47f00" },
-  "Condo":        { emoji: "🏘️", color: "#6A1B9A" },
+  "Condominio":   { emoji: "🏘️", color: "#6A1B9A" },
   "Rancho":       { emoji: "🏡", color: "#4E342E" },
+  "Oficina":      { emoji: "🏛️", color: "#37474F" },
+  "Depósito":     { emoji: "🏗️", color: "#546E7A" },
 };
 
+function translate(type?: string) {
+  if (!type) return "Otro";
+  return TYPE_TRANSLATE[type] ?? type;
+}
+
 function getStyle(type?: string) {
-  return TYPE_ICONS[type ?? ""] ?? { emoji: "🏠", color: "#B48A73" };
+  const t = translate(type);
+  return TYPE_ICONS[t] ?? { emoji: "🏠", color: "#B48A73" };
 }
 
 export default function PropertiesMap({ pins }: { pins: MapPin[] }) {
@@ -34,7 +49,7 @@ export default function PropertiesMap({ pins }: { pins: MapPin[] }) {
   const markersRef = useRef<any[]>([]);
   const [ready, setReady] = useState(false);
 
-  const allTypes = Array.from(new Set(pins.map(p => p.type ?? "Otro"))).filter(Boolean);
+  const allTypes = Array.from(new Set(pins.map(p => translate(p.type)))).filter(Boolean);
   const [activeTypes, setActiveTypes] = useState<Set<string>>(() => new Set(allTypes));
   const [activeOps, setActiveOps] = useState<Set<string>>(() => new Set(["venta", "alquiler"]));
 
@@ -46,7 +61,7 @@ export default function PropertiesMap({ pins }: { pins: MapPin[] }) {
       if (!mapRef.current || mapInstance.current) return;
       const L = (window as any).L;
 
-      const map = L.map(mapRef.current, { scrollWheelZoom: false });
+      const map = L.map(mapRef.current, { scrollWheelZoom: true });
       mapInstance.current = map;
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -87,10 +102,11 @@ export default function PropertiesMap({ pins }: { pins: MapPin[] }) {
     markersRef.current = [];
 
     const visible = pins.filter(p =>
-      activeTypes.has(p.type ?? "Otro") && activeOps.has(p.op)
+      activeTypes.has(translate(p.type)) && activeOps.has(p.op)
     );
 
     visible.forEach(pin => {
+      const typeEs = translate(pin.type);
       const { emoji, color } = getStyle(pin.type);
       const icon = L.divIcon({
         html: `<div style="
@@ -111,7 +127,7 @@ export default function PropertiesMap({ pins }: { pins: MapPin[] }) {
         <div style="min-width:190px;font-family:sans-serif;padding:2px">
           ${pin.photo ? `<img src="${pin.photo}" style="width:100%;height:100px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block"/>` : ""}
           <div style="font-size:10px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">
-            ${pin.type ?? ""} · ${pin.op === "venta" ? "Venta" : "Alquiler"}
+            ${typeEs} · ${pin.op === "venta" ? "Venta" : "Alquiler"}
           </div>
           <div style="font-weight:700;font-size:13px;margin-bottom:5px;line-height:1.3;color:#1a1a1a">${pin.address}</div>
           <div style="font-size:15px;font-weight:900;color:#2D3134;margin-bottom:10px">${pin.price}</div>
@@ -135,64 +151,58 @@ export default function PropertiesMap({ pins }: { pins: MapPin[] }) {
     setActiveOps(prev => { const n = new Set(prev); n.has(op) ? n.delete(op) : n.add(op); return n; });
   }
 
-  const visibleCount = pins.filter(p => activeTypes.has(p.type ?? "Otro") && activeOps.has(p.op)).length;
+  const visibleCount = pins.filter(p => activeTypes.has(translate(p.type)) && activeOps.has(p.op)).length;
 
   if (pins.length === 0) return null;
 
   return (
-    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden" }}>
-
-      {/* Filtros encima del mapa */}
+    <div>
+      {/* Filtros FUERA del mapa */}
       <div style={{
-        position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)",
-        zIndex: 1000, display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center",
-        background: "rgba(255,255,255,0.95)", borderRadius: 14, padding: "8px 12px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.15)", backdropFilter: "blur(6px)",
-        maxWidth: "calc(100% - 32px)",
+        display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center",
+        marginBottom: 14, padding: "10px 14px",
+        background: "#f8f8f8", borderRadius: 12, border: "1px solid #eee",
       }}>
         {(["venta", "alquiler"] as const).map(op => (
           <button key={op} onClick={() => toggleOp(op)} style={{
-            padding: "5px 12px", borderRadius: 999,
+            padding: "6px 14px", borderRadius: 999,
             border: `2px solid ${activeOps.has(op) ? "#2D3134" : "#ddd"}`,
-            background: activeOps.has(op) ? "#2D3134" : "#f5f5f5",
+            background: activeOps.has(op) ? "#2D3134" : "#fff",
             color: activeOps.has(op) ? "#fff" : "#aaa",
-            fontWeight: 800, fontSize: 11, cursor: "pointer",
+            fontWeight: 800, fontSize: 12, cursor: "pointer",
           }}>
             {op === "venta" ? "🏷️ Venta" : "🔑 Alquiler"}
           </button>
         ))}
 
-        <div style={{ width: 1, background: "#ddd", alignSelf: "stretch" }} />
+        <div style={{ width: 1, height: 24, background: "#ddd" }} />
 
         {allTypes.map(t => {
           const { emoji, color } = getStyle(t);
           const active = activeTypes.has(t);
           return (
             <button key={t} onClick={() => toggleType(t)} style={{
-              padding: "5px 12px", borderRadius: 999,
+              padding: "6px 14px", borderRadius: 999,
               border: `2px solid ${active ? color : "#ddd"}`,
-              background: active ? color : "#f5f5f5",
+              background: active ? color : "#fff",
               color: active ? "#fff" : "#aaa",
-              fontWeight: 700, fontSize: 11, cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 4,
+              fontWeight: 700, fontSize: 12, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 5,
             }}>
               {emoji} {t}
             </button>
           );
         })}
+
+        <span style={{ marginLeft: "auto", fontSize: 12, color: "#888", fontWeight: 700 }}>
+          {visibleCount} propiedad{visibleCount !== 1 ? "es" : ""}
+        </span>
       </div>
 
-      {/* Contador */}
-      <div style={{
-        position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)",
-        zIndex: 1000, background: "rgba(45,49,52,0.88)", color: "#fff",
-        padding: "5px 16px", borderRadius: 999, fontSize: 11, fontWeight: 700,
-        whiteSpace: "nowrap", boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-      }}>
-        {visibleCount} propiedad{visibleCount !== 1 ? "es" : ""} visibles
+      {/* Mapa */}
+      <div style={{ position: "relative", borderRadius: 16, overflow: "hidden" }}>
+        <div ref={mapRef} style={{ width: "100%", height: 460 }} />
       </div>
-
-      <div ref={mapRef} style={{ width: "100%", height: 460 }} />
     </div>
   );
 }
