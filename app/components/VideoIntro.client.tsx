@@ -66,11 +66,9 @@ export default function VideoIntro() {
           }}
         >
           {/* Logo real */}
-          <img
-            src="/logo.png"
-            alt="Pino Galant"
-            style={{ width: 160, height: 160, objectFit: "contain", marginBottom: 32 }}
-          />
+          <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", marginBottom: 32, flexShrink: 0 }}>
+            <img src="/logo.png" alt="Pino Galant" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
 
           {/* Botón play */}
           <div style={{

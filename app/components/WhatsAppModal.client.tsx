@@ -72,7 +72,9 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
             cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center",
           }}>×</button>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <img src="/logo.png" alt="Pino Galant" style={{ width: 52, height: 52, objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ width: 52, height: 52, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+            <img src="/logo.png" alt="Pino Galant" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
             <div>
               <div style={{ color: "#fff", fontWeight: 800, fontSize: 17, lineHeight: 1.2 }}>Pino Galant</div>
               <div style={{ color: "rgba(255,255,255,.6)", fontSize: 12, marginTop: 2 }}>Negocios Inmobiliarios</div>
