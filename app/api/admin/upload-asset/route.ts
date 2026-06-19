@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 const ALLOWED: Record<string, string> = {
   "hero.jpg": "image/jpeg",
   "buscar-sonado.mp4": "video/mp4",
+  "pinogalant-intro.mp4": "video/mp4",
 };
 
 export async function POST(req: NextRequest) {

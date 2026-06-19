@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { getSiteAssetUrlDirect } from "@/lib/site-assets";
+
+const INTRO_VIDEO_URL = getSiteAssetUrlDirect("pinogalant-intro.mp4");
 
 type Phase = "welcome" | "playing" | "fadeout" | "done";
 
@@ -40,7 +43,7 @@ export default function VideoIntro() {
       {/* Video — centrado, no estirado */}
       <video
         ref={videoRef}
-        src="/pinogalant-intro.mp4"
+        src={INTRO_VIDEO_URL}
         playsInline
         preload="auto"
         onEnded={handleEnded}

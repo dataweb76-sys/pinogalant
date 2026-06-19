@@ -8,11 +8,12 @@ type Settings = {
 
 export default function EditarPagina() {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"hero" | "video" | "imagenes">("hero");
+  const [tab, setTab] = useState<"hero" | "intro" | "video" | "imagenes">("hero");
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const introInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   async function uploadFile(file: File, assetPath: string) {
@@ -52,6 +53,21 @@ export default function EditarPagina() {
     } finally {
       setUploading(false);
       if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  }
+
+  async function handleIntro(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true); setError(""); setSuccess("");
+    try {
+      await uploadFile(file, "pinogalant-intro.mp4");
+      setSuccess("✓ Video de ingreso actualizado en Supabase. Recargá el sitio para verlo.");
+    } catch (err: any) {
+      setError("Error al subir: " + err.message);
+    } finally {
+      setUploading(false);
+      if (introInputRef.current) introInputRef.current.value = "";
     }
   }
 
@@ -102,9 +118,10 @@ export default function EditarPagina() {
             </div>
 
             {/* Tabs */}
-            <div style={{ padding: "16px 24px 0", display: "flex", gap: 8 }}>
-              <button style={tabStyle(tab === "hero")} onClick={() => { setTab("hero"); setSuccess(""); setError(""); }}>Imagen hero</button>
-              <button style={tabStyle(tab === "video")} onClick={() => { setTab("video"); setSuccess(""); setError(""); }}>Video popup</button>
+            <div style={{ padding: "16px 24px 0", display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button style={tabStyle(tab === "hero")}     onClick={() => { setTab("hero");     setSuccess(""); setError(""); }}>Imagen hero</button>
+              <button style={tabStyle(tab === "intro")}    onClick={() => { setTab("intro");    setSuccess(""); setError(""); }}>Video ingreso</button>
+              <button style={tabStyle(tab === "video")}    onClick={() => { setTab("video");    setSuccess(""); setError(""); }}>Video búsqueda</button>
               <button style={tabStyle(tab === "imagenes")} onClick={() => { setTab("imagenes"); setSuccess(""); setError(""); }}>Imágenes</button>
             </div>
 
@@ -136,7 +153,32 @@ export default function EditarPagina() {
                 </div>
               )}
 
-              {/* TAB VIDEO */}
+              {/* TAB INTRO */}
+              {tab === "intro" && (
+                <div>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+                    Reemplaza el video que se muestra al ingresar al sitio por primera vez (popup de bienvenida).<br />
+                    <strong>Formato:</strong> MP4. <strong>Recomendado:</strong> menos de 20MB para carga rápida.
+                  </p>
+                  <div style={{ background: "#F7F4F1", borderRadius: 12, padding: "20px", textAlign: "center", border: "2px dashed #D5C4B8", marginBottom: 16 }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>🎥</div>
+                    <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Archivo actual: <strong>pinogalant-intro.mp4</strong></div>
+                    <input ref={introInputRef} type="file" accept="video/mp4,video/*" style={{ display: "none" }} onChange={handleIntro} />
+                    <button
+                      onClick={() => introInputRef.current?.click()}
+                      disabled={uploading}
+                      style={{ background: "#B48A73", color: "#fff", border: "none", borderRadius: 8, padding: "10px 22px", fontWeight: 700, fontSize: 13, cursor: uploading ? "not-allowed" : "pointer", opacity: uploading ? 0.6 : 1 }}
+                    >
+                      {uploading ? "Subiendo..." : "Elegir nuevo video de ingreso"}
+                    </button>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: "#aaa" }}>
+                    El video se sube a Supabase Storage. El sitio lo muestra al instante tras recargar.
+                  </p>
+                </div>
+              )}
+
+              {/* TAB VIDEO BÚSQUEDA */}
               {tab === "video" && (
                 <div>
                   <p style={{ margin: "0 0 16px", fontSize: 13, color: "#555", lineHeight: 1.6 }}>
