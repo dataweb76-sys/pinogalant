@@ -19,6 +19,7 @@ export default function HeroSearch() {
   }
 
   return (
+    <>
     <div className="hero-search">
       <div className="hero-search-tabs">
         <button
@@ -62,5 +63,6 @@ export default function HeroSearch() {
       </div>
     </div>
     <BusquedaSuenos />
+    </>
   );
 }
