@@ -178,6 +178,7 @@ export default async function PropiedadesPage({
             })
           } />
         </div>
+        </div>
 
         <style>{`
           .filtros-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
