@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import MobileMenu from "./MobileMenu.client";
 import HeaderChat from "./HeaderChat.client";
 import WhatsAppButton from "./WhatsAppButton.client";
@@ -33,14 +33,14 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
           fontWeight: 900, letterSpacing: -0.5, textDecoration: "none", color: "inherit",
           display: "inline-flex", alignItems: "center", gap: 9, fontSize: 16, flexShrink: 0,
         }}>
-          <img src="/logo.png" alt="Pino Galant" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "50%", flexShrink: 0 }} />
+          <img src="/logo.svg" alt="Pino Galant" style={{ width: 40, height: 40, flexShrink: 0 }} />
           <span className="hide-xs">Pino Galant</span>
         </Link>
 
-        {/* CHAT — entre logo y nav */}
+        {/* CHAT â€” entre logo y nav */}
         <HeaderChat />
 
-        {/* NAV — solo desktop */}
+        {/* NAV â€” solo desktop */}
         <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 2 }}>
           {[
             { href: "/propiedades",                   label: "Propiedades" },
@@ -83,12 +83,12 @@ export default function SiteHeader({ user }: { user: HeaderUser | null }) {
 
         {/* RIGHT */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          {/* WhatsApp — solo desktop */}
+          {/* WhatsApp â€” solo desktop */}
           <div className="desktop-nav">
             <WhatsAppButton />
           </div>
 
-          {/* Auth — solo desktop */}
+          {/* Auth â€” solo desktop */}
           {user ? (
             <Link href="/perfil" className="desktop-nav" style={{
               display: "inline-flex", alignItems: "center", gap: 8,

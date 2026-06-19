@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 
 const WA_NUMBER = "5492954228356";
@@ -31,8 +31,8 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
     setSent(true);
 
     const texto = open
-      ? `Hola, mi nombre es ${name}${phone ? `, mi teléfono es ${phone}` : ""}. ${message}`
-      : `Hola, mi nombre es ${name}${phone ? `, mi teléfono es ${phone}` : ""}. ${message}\n\n_(Envío fuera de horario comercial)_`;
+      ? `Hola, mi nombre es ${name}${phone ? `, mi telÃ©fono es ${phone}` : ""}. ${message}`
+      : `Hola, mi nombre es ${name}${phone ? `, mi telÃ©fono es ${phone}` : ""}. ${message}\n\n_(EnvÃ­o fuera de horario comercial)_`;
 
     setTimeout(() => {
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(texto)}`, "_blank");
@@ -70,16 +70,16 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
             background: "rgba(255,255,255,0.12)", border: "none",
             color: "#fff", width: 30, height: 30, borderRadius: "50%",
             cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center",
-          }}>×</button>
+          }}>Ã—</button>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <img src="/logo.png" alt="Pino Galant" style={{ width: 52, height: 52, objectFit: "cover", borderRadius: "50%", flexShrink: 0 }} />
+            <img src="/logo.svg" alt="Pino Galant" style={{ width: 52, height: 52, flexShrink: 0 }} />
             <div>
               <div style={{ color: "#fff", fontWeight: 800, fontSize: 17, lineHeight: 1.2 }}>Pino Galant</div>
               <div style={{ color: "rgba(255,255,255,.6)", fontSize: 12, marginTop: 2 }}>Negocios Inmobiliarios</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: isBusinessHours() ? "#4ade80" : "#f59e0b", display: "block" }} />
                 <span style={{ color: "rgba(255,255,255,.7)", fontSize: 11 }}>
-                  {isBusinessHours() ? "En línea · Lun a Sáb 9 a 20 hs" : "Fuera de horario · Lun a Sáb 9 a 20 hs"}
+                  {isBusinessHours() ? "En lÃ­nea Â· Lun a SÃ¡b 9 a 20 hs" : "Fuera de horario Â· Lun a SÃ¡b 9 a 20 hs"}
                 </span>
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
         {!sent ? (
           <form onSubmit={handleSend} style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
             <p style={{ margin: 0, fontSize: 14, color: "#555", lineHeight: 1.6 }}>
-              Completá el formulario y te contactaremos a la brevedad. Podés consultarnos sobre cualquier propiedad.
+              CompletÃ¡ el formulario y te contactaremos a la brevedad. PodÃ©s consultarnos sobre cualquier propiedad.
             </p>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 5 }}>
@@ -97,7 +97,7 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
               </label>
               <input
                 value={name} onChange={e => setName(e.target.value)} required
-                placeholder="Ej: Juan García"
+                placeholder="Ej: Juan GarcÃ­a"
                 style={{
                   width: "100%", padding: "11px 14px", borderRadius: 10,
                   border: "1.5px solid #e5e7eb", fontSize: 14, outline: "none",
@@ -107,7 +107,7 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 5 }}>
-                Teléfono / WhatsApp
+                TelÃ©fono / WhatsApp
               </label>
               <input
                 value={phone} onChange={e => setPhone(e.target.value)}
@@ -121,7 +121,7 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 5 }}>
-                ¿En qué podemos ayudarte? *
+                Â¿En quÃ© podemos ayudarte? *
               </label>
               <textarea
                 value={message} onChange={e => setMessage(e.target.value)} required rows={3}
@@ -146,34 +146,34 @@ export default function WhatsAppModal({ onClose }: { onClose: () => void }) {
               Enviar consulta por WhatsApp
             </button>
             <p style={{ margin: 0, fontSize: 11, color: "#aaa", textAlign: "center" }}>
-              Al continuar, serás redirigido a WhatsApp con tu mensaje listo para enviar.
+              Al continuar, serÃ¡s redirigido a WhatsApp con tu mensaje listo para enviar.
             </p>
           </form>
         ) : (
           <div style={{ padding: 32, textAlign: "center" }}>
             {offHours ? (
               <>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>🌙</div>
+                <div style={{ fontSize: 40, marginBottom: 16 }}>ðŸŒ™</div>
                 <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 10, color: "#2D3134" }}>
                   Recibimos tu consulta
                 </div>
                 <p style={{ fontSize: 14, color: "#555", lineHeight: 1.7, margin: "0 0 16px" }}>
                   Hola <strong>{name}</strong>, gracias por contactarte con <strong>Pino Galant</strong>.<br /><br />
-                  En este momento nuestra oficina se encuentra cerrada. Nuestro horario de atención es de <strong>lunes a sábado de 9:00 a 20:00 hs</strong>.<br /><br />
-                  Tu consulta fue recibida y será atendida por uno de nuestros asesores en el primer turno disponible. Podés enviar el mensaje igualmente y te respondemos a la brevedad.
+                  En este momento nuestra oficina se encuentra cerrada. Nuestro horario de atenciÃ³n es de <strong>lunes a sÃ¡bado de 9:00 a 20:00 hs</strong>.<br /><br />
+                  Tu consulta fue recibida y serÃ¡ atendida por uno de nuestros asesores en el primer turno disponible. PodÃ©s enviar el mensaje igualmente y te respondemos a la brevedad.
                 </p>
-                <div style={{ fontSize: 12, color: "#B48A73", fontWeight: 700 }}>Abriendo WhatsApp…</div>
+                <div style={{ fontSize: 12, color: "#B48A73", fontWeight: 700 }}>Abriendo WhatsAppâ€¦</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
+                <div style={{ fontSize: 40, marginBottom: 16 }}>âœ…</div>
                 <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 10, color: "#2D3134" }}>
-                  ¡Listo, {name.split(" ")[0]}!
+                  Â¡Listo, {name.split(" ")[0]}!
                 </div>
                 <p style={{ fontSize: 14, color: "#555", lineHeight: 1.7, margin: "0 0 16px" }}>
-                  Tu consulta está lista para enviar. Te redirigimos a WhatsApp en un momento.
+                  Tu consulta estÃ¡ lista para enviar. Te redirigimos a WhatsApp en un momento.
                 </p>
-                <div style={{ fontSize: 12, color: "#25D366", fontWeight: 700 }}>Abriendo WhatsApp…</div>
+                <div style={{ fontSize: 12, color: "#25D366", fontWeight: 700 }}>Abriendo WhatsAppâ€¦</div>
               </>
             )}
           </div>

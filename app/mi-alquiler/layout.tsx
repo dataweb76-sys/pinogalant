@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -26,10 +26,10 @@ export default async function MiAlquilerLayout({ children }: { children: React.R
     .toUpperCase();
 
   const NAV = [
-    { href: "/mi-alquiler",           label: "Mi alquiler",  icon: "🏠" },
-    { href: "/mi-alquiler/pagos",     label: "Pagos",        icon: "💳" },
-    { href: "/mi-alquiler/contrato",  label: "Mi contrato",  icon: "📄" },
-    { href: "/mi-alquiler/reclamos",  label: "Reclamos",     icon: "🔧" },
+    { href: "/mi-alquiler",           label: "Mi alquiler",  icon: "ðŸ " },
+    { href: "/mi-alquiler/pagos",     label: "Pagos",        icon: "ðŸ’³" },
+    { href: "/mi-alquiler/contrato",  label: "Mi contrato",  icon: "ðŸ“„" },
+    { href: "/mi-alquiler/reclamos",  label: "Reclamos",     icon: "ðŸ”§" },
   ];
 
   return (
@@ -50,11 +50,11 @@ export default async function MiAlquilerLayout({ children }: { children: React.R
       }}>
         {/* Logo + nombre */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", padding: "10px 0" }}>
-          <img src="/logo.png" alt="Pino Galant" style={{ width: 34, height: 34, objectFit: "cover", borderRadius: "50%", flexShrink: 0 }} />
+          <img src="/logo.svg" alt="Pino Galant" style={{ width: 34, height: 34, flexShrink: 0 }} />
           <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>Pino Galant</span>
         </Link>
 
-        {/* Nav — scrollable en mobile */}
+        {/* Nav â€” scrollable en mobile */}
         <nav className="mi-alquiler-nav" style={{ display: "flex", gap: 2, marginLeft: 16, flex: 1, overflowX: "auto" }}>
           {NAV.map(item => (
             <Link
@@ -94,7 +94,7 @@ export default async function MiAlquilerLayout({ children }: { children: React.R
           <Link href="/logout" style={{
             color: "rgba(255,255,255,.5)", fontSize: 18,
             textDecoration: "none",
-          }}>↩</Link>
+          }}>â†©</Link>
         </div>
       </header>
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -23,22 +23,22 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
   }, [open]);
 
   const links = [
-    { href: "/propiedades",                  label: "Propiedades",    icon: "🏠" },
-    { href: "/propiedades?operation=venta",  label: "En venta",       icon: "🔑" },
-    { href: "/propiedades?operation=alquiler", label: "En alquiler",  icon: "📋" },
-    { href: "/publicar",                     label: "Publicar",       icon: "📤" },
-    ...(isTenant ? [{ href: "/mi-alquiler",   label: "Mi alquiler",   icon: "🏡" }] : []),
-    ...(isOwner  ? [{ href: "/mi-propiedad", label: "Mi propiedad",  icon: "🏢" }] : []),
-    ...(isAdmin  ? [{ href: "/admin",         label: "Panel Agentes", icon: "⚙️" }] : []),
+    { href: "/propiedades",                  label: "Propiedades",    icon: "ðŸ " },
+    { href: "/propiedades?operation=venta",  label: "En venta",       icon: "ðŸ”‘" },
+    { href: "/propiedades?operation=alquiler", label: "En alquiler",  icon: "ðŸ“‹" },
+    { href: "/publicar",                     label: "Publicar",       icon: "ðŸ“¤" },
+    ...(isTenant ? [{ href: "/mi-alquiler",   label: "Mi alquiler",   icon: "ðŸ¡" }] : []),
+    ...(isOwner  ? [{ href: "/mi-propiedad", label: "Mi propiedad",  icon: "ðŸ¢" }] : []),
+    ...(isAdmin  ? [{ href: "/admin",         label: "Panel Agentes", icon: "âš™ï¸" }] : []),
   ];
 
   return (
     <>
-      {/* Botón hamburguesa */}
+      {/* BotÃ³n hamburguesa */}
       <button
         onClick={() => setOpen(!open)}
         className="mobile-menu-btn"
-        aria-label="Menú"
+        aria-label="MenÃº"
         style={{
           display: "none",
           background: "none",
@@ -85,13 +85,13 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <img src="/logo.png" alt="Pino Galant" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: "50%" }} />
+                <img src="/logo.svg" alt="Pino Galant" style={{ width: 36, height: 36, objectFit: "contain" }} />
                 <span style={{ fontWeight: 900, fontSize: 16, color: "#2D3134" }}>Pino Galant</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
                 style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}
-              >✕</button>
+              >âœ•</button>
             </div>
 
             {/* Links */}
@@ -126,7 +126,7 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
                   borderRadius: 12, textDecoration: "none", fontWeight: 800, fontSize: 15,
                 }}
               >
-                💬 WhatsApp
+                ðŸ’¬ WhatsApp
               </a>
               {isLoggedIn ? (
                 <Link href="/perfil" onClick={() => setOpen(false)} style={{
