@@ -85,7 +85,7 @@ export default function MobileMenu({ isAdmin, isLoggedIn, isTenant, isOwner }: M
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <img src="/logo.png" alt="Pino Galant" style={{ width: 36, height: 36, objectFit: "contain" }} />
+                <img src="/logo.png" alt="Pino Galant" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: "50%" }} />
                 <span style={{ fontWeight: 900, fontSize: 16, color: "#2D3134" }}>Pino Galant</span>
               </div>
               <button

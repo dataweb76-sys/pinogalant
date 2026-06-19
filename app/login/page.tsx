@@ -16,7 +16,7 @@ export default function LoginPage({
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <img src="/logo.png" alt="Pino Galant" style={{ width: 80, height: 80, objectFit: "contain" }} />
+        <img src="/logo.png" alt="Pino Galant" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: "50%" }} />
         <div style={{ marginTop: 10, fontWeight: 900, fontSize: 20, color: "#2D3134" }}>Pino Galant</div>
         <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>Ingresá a tu cuenta</div>
       </div>
