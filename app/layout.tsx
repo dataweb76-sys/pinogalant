@@ -44,6 +44,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   alternates: { canonical: "https://pinogalant.com.ar" },
+  verification: { google: "dimt0Ck2q7nAU9_Pipk3QdTNOSsN8F-395bqjqkdPdw" },
 };
 
 export const runtime = "nodejs";
