@@ -107,6 +107,11 @@ export default async function HomePage() {
       {/* ===== HERO ===== */}
       <section className="hero-section" style={{ backgroundImage: `url('${heroImageUrl}')` }}>
         <div className="hero-inner">
+          <img
+            src="/logo.png"
+            alt="Pino Galant"
+            style={{ width: 120, height: 120, objectFit: "contain", marginBottom: 16, filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.5))" }}
+          />
           <h1 className="hero-title">
             Encontrá tu próximo hogar<br />
             <span>con asesoría real.</span>
