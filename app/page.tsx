@@ -18,12 +18,12 @@ export const revalidate = 300;
 export const preferredRegion = ["gru1"];
 
 const CATEGORIES = [
-  { typeId: "3",  label: "Casas",        icon: "🏠" },
-  { typeId: "2",  label: "Departamentos", icon: "🏢" },
-  { typeId: "1",  label: "Terrenos",      icon: "📐" },
-  { typeId: "7",  label: "Locales",       icon: "🏪" },
-  { typeId: "4",  label: "Quintas",       icon: "🌾" },
-  { typeId: "9",  label: "Campos",        icon: "🌿" },
+  { typeId: "3", label: "Casas",         img: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=120&h=120&fit=crop&auto=format" },
+  { typeId: "2", label: "Departamentos", img: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=120&h=120&fit=crop&auto=format" },
+  { typeId: "1", label: "Terrenos",      img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=120&h=120&fit=crop&auto=format" },
+  { typeId: "7", label: "Locales",       img: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=120&h=120&fit=crop&auto=format" },
+  { typeId: "4", label: "Quintas",       img: "https://images.unsplash.com/photo-1510627498534-cf7e9002facc?w=120&h=120&fit=crop&auto=format" },
+  { typeId: "9", label: "Campos",        img: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=120&h=120&fit=crop&auto=format" },
 ];
 
 // Etiquetas para el buscador hero (más descriptivas)
@@ -151,7 +151,7 @@ export default async function HomePage() {
         <div className="categories-grid">
           {CATEGORIES.map((cat) => (
             <Link key={cat.typeId} href={`/propiedades?type=${cat.typeId}`} className="category-card">
-              <span className="category-icon">{cat.icon}</span>
+              <img src={cat.img} alt={cat.label} className="category-icon" />
               <span className="category-label">{cat.label}</span>
               <span className="category-count">
                 {counts[cat.typeId] ? `${counts[cat.typeId]} disponibles` : "Ver todas"}
