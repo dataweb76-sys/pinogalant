@@ -110,7 +110,7 @@ export default async function HomePage() {
           <img
             src="/logo.png"
             alt="Pino Galant"
-            style={{ width: 120, height: 120, objectFit: "contain", marginBottom: 16, filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.5))" }}
+            style={{ width: 220, height: 220, objectFit: "contain", marginBottom: 16, filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
           />
           <h1 className="hero-title">
             Encontrá tu próximo hogar<br />
