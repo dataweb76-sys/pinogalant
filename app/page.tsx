@@ -22,7 +22,7 @@ const CATEGORIES = [
   { typeId: "2", label: "Departamentos", img: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=120&h=120&fit=crop&auto=format" },
   { typeId: "1", label: "Terrenos",      img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=120&h=120&fit=crop&auto=format" },
   { typeId: "7", label: "Locales",       img: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=120&h=120&fit=crop&auto=format" },
-  { typeId: "4", label: "Quintas",       img: "https://images.unsplash.com/photo-1510627498534-cf7e9002facc?w=120&h=120&fit=crop&auto=format" },
+  { typeId: "4", label: "Quintas",       img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=120&h=120&fit=crop&auto=format" },
   { typeId: "9", label: "Campos",        img: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=120&h=120&fit=crop&auto=format" },
 ];
 
