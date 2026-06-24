@@ -252,16 +252,16 @@ export default async function PropiedadesPage({
         }
         .pg-card-img {
           position: relative;
-          height: 340px;
+          aspect-ratio: 16 / 9;
           overflow: hidden;
           display: block;
           text-decoration: none;
-          background: #eee;
+          background: #f2f2f2;
         }
         .pg-card-img img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           object-position: center center;
           display: block;
         }
