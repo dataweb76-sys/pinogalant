@@ -234,7 +234,7 @@ export default async function PropiedadesPage({
           gap: 24px;
         }
         @media (min-width: 600px) { .pg-grid { grid-template-columns: 1fr 1fr; } }
-        @media (min-width: 1000px) { .pg-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+        @media (min-width: 1000px) { .pg-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
 
         /* CARD */
         .pg-card {
@@ -252,7 +252,7 @@ export default async function PropiedadesPage({
         }
         .pg-card-img {
           position: relative;
-          aspect-ratio: 4 / 3;
+          aspect-ratio: 3 / 2;
           overflow: hidden;
           display: block;
           text-decoration: none;
