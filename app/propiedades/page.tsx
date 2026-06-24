@@ -198,10 +198,10 @@ export default async function PropiedadesPage({
         }
         .pg-layout {
           display: flex;
-          gap: 32px;
-          max-width: 1300px;
+          gap: 24px;
+          max-width: 1600px;
           margin: 0 auto;
-          padding: 36px 24px 80px;
+          padding: 28px 20px 80px;
           align-items: flex-start;
         }
         .pg-main { flex: 1; min-width: 0; }
@@ -252,25 +252,16 @@ export default async function PropiedadesPage({
         }
         .pg-card-img {
           position: relative;
-          aspect-ratio: 3 / 2;
+          height: 340px;
           overflow: hidden;
           display: block;
           text-decoration: none;
-          background: #1a1c1e;
-        }
-        .pg-card-img .img-bg {
-          position: absolute;
-          inset: -10px;
-          background-size: cover;
-          background-position: center;
-          filter: blur(12px) brightness(0.6);
-          transform: scale(1.1);
+          background: #eee;
         }
         .pg-card-img img {
-          position: relative;
           width: 100%;
           height: 100%;
-          object-fit: contain;
+          object-fit: cover;
           object-position: center center;
           display: block;
         }
@@ -543,10 +534,7 @@ export default async function PropiedadesPage({
                     {/* IMAGE */}
                     <Link href={`/propiedades/${p.id}`} className="pg-card-img">
                       {cover ? (
-                        <>
-                          <div className="img-bg" style={{ backgroundImage: `url(${cover})` }} />
-                          <img src={cover} alt={p.address} />
-                        </>
+                        <img src={cover} alt={p.address} />
                       ) : (
                         <div style={{ width: "100%", height: "100%", background: "#2D3134", display: "grid", placeItems: "center" }}>
                           <span style={{ fontSize: 48, opacity: 0.3 }}>🏠</span>
