@@ -252,15 +252,26 @@ export default async function PropiedadesPage({
         }
         .pg-card-img {
           position: relative;
-          height: 240px;
+          aspect-ratio: 4 / 3;
           overflow: hidden;
           display: block;
           text-decoration: none;
+          background: #1a1c1e;
+        }
+        .pg-card-img .img-bg {
+          position: absolute;
+          inset: -10px;
+          background-size: cover;
+          background-position: center;
+          filter: blur(12px) brightness(0.6);
+          transform: scale(1.1);
         }
         .pg-card-img img {
+          position: relative;
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
+          object-position: center center;
           display: block;
         }
         .pg-card-img-overlay {
@@ -532,7 +543,10 @@ export default async function PropiedadesPage({
                     {/* IMAGE */}
                     <Link href={`/propiedades/${p.id}`} className="pg-card-img">
                       {cover ? (
-                        <img src={cover} alt={p.address} />
+                        <>
+                          <div className="img-bg" style={{ backgroundImage: `url(${cover})` }} />
+                          <img src={cover} alt={p.address} />
+                        </>
                       ) : (
                         <div style={{ width: "100%", height: "100%", background: "#2D3134", display: "grid", placeItems: "center" }}>
                           <span style={{ fontSize: 48, opacity: 0.3 }}>🏠</span>
