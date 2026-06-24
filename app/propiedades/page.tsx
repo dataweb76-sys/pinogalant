@@ -252,17 +252,13 @@ export default async function PropiedadesPage({
         }
         .pg-card-img {
           position: relative;
-          aspect-ratio: 16 / 9;
-          overflow: hidden;
           display: block;
           text-decoration: none;
-          background: #f2f2f2;
+          overflow: hidden;
         }
         .pg-card-img img {
           width: 100%;
-          height: 100%;
-          object-fit: contain;
-          object-position: center center;
+          height: auto;
           display: block;
         }
         .pg-card-img-overlay {
