@@ -546,8 +546,7 @@ export default async function PropiedadesPage({
                         <div className="pg-card-type">{type}</div>
                       </div>
 
-                      {/* TOP RIGHT: LOGO */}
-                      <img src="/logo.png" alt="Pino Galant" className="pg-card-logo" />
+
 
                       {/* BADGE */}
                       {badge && (
