@@ -252,12 +252,10 @@ export default async function HomePage() {
             <Link href="/propiedades" className="about-cta">
               Ver propiedades disponibles →
             </Link>
-            <OficinaModal />
           </div>
           <div className="about-stats">
-            <div className="stat-card">
-              <div className="stat-number">10+</div>
-              <div className="stat-label">Años de experiencia</div>
+            <div className="stat-card" style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <OficinaModal />
             </div>
             <div className="stat-card">
               <div className="stat-number">{totalPublished > 0 ? totalPublished : "—"}</div>

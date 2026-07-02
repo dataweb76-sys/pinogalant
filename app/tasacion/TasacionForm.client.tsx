@@ -4,25 +4,76 @@ import { useState } from "react";
 const WA = "5492954228356";
 
 const TIPOS = ["Casa", "Departamento", "Terreno", "Local comercial", "Oficina", "Quinta / Campo", "PH", "Otro"];
-const ZONAS = ["Centro", "Macrocentro", "Villa del Parque", "Avellaneda", "Castelar", "Barrio Norte", "Zona sur", "Zona norte", "Otro"];
 const ESTADOS = ["Excelente", "Muy bueno", "Bueno", "Regular", "A refaccionar"];
+
+const UBICACION: Record<string, Record<string, string[]>> = {
+  "La Pampa": {
+    "Santa Rosa": ["Centro", "Macrocentro", "Villa del Parque", "Avellaneda", "Barrio Norte", "Zona sur", "Zona norte", "Inti Hué", "El Faro", "Otro"],
+    "General Pico": ["Centro", "Zona norte", "Zona sur", "Otro"],
+    "Toay": ["Centro", "Zona rural", "Otro"],
+    "Realicó": ["Centro", "Otro"],
+    "Victorica": ["Centro", "Otro"],
+    "Macachín": ["Centro", "Otro"],
+    "Eduardo Castex": ["Centro", "Otro"],
+    "Otra localidad": ["Otro"],
+  },
+  "Buenos Aires": {
+    "Buenos Aires (CABA)": ["Palermo", "Belgrano", "Caballito", "Flores", "Villa Urquiza", "Otro"],
+    "Mar del Plata": ["Centro", "Los Troncos", "La Perla", "Otro"],
+    "Bahía Blanca": ["Centro", "Zona norte", "Zona sur", "Otro"],
+    "La Plata": ["Centro", "Zona norte", "Zona sur", "Otro"],
+    "Otra localidad": ["Otro"],
+  },
+  "Córdoba": {
+    "Córdoba Capital": ["Centro", "Nueva Córdoba", "Güemes", "Alberdi", "Otro"],
+    "Río Cuarto": ["Centro", "Zona norte", "Zona sur", "Otro"],
+    "Villa María": ["Centro", "Otro"],
+    "Otra localidad": ["Otro"],
+  },
+  "San Luis": {
+    "San Luis Capital": ["Centro", "Zona norte", "Zona sur", "Otro"],
+    "Villa Mercedes": ["Centro", "Otro"],
+    "Otra localidad": ["Otro"],
+  },
+  "Mendoza": {
+    "Mendoza Capital": ["Centro", "Godoy Cruz", "Maipú", "Otro"],
+    "San Rafael": ["Centro", "Otro"],
+    "Otra localidad": ["Otro"],
+  },
+  "Otra provincia": {
+    "Otra localidad": ["Otro"],
+  },
+};
 
 export default function TasacionForm() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    tipo: "", zona: "", superficie: "", ambientes: "", estado: "", extras: "",
+    tipo: "", provincia: "", ciudad: "", zona: "",
+    superficie: "", ambientes: "", estado: "", extras: "",
     nombre: "", telefono: "",
   });
   const [sent, setSent] = useState(false);
 
-  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+  function set(k: string, v: string) {
+    if (k === "provincia") {
+      setForm(f => ({ ...f, provincia: v, ciudad: "", zona: "" }));
+    } else if (k === "ciudad") {
+      setForm(f => ({ ...f, ciudad: v, zona: "" }));
+    } else {
+      setForm(f => ({ ...f, [k]: v }));
+    }
+  }
+
+  const ciudades = form.provincia ? Object.keys(UBICACION[form.provincia] ?? {}) : [];
+  const zonas = form.ciudad ? (UBICACION[form.provincia]?.[form.ciudad] ?? []) : [];
 
   function handleSend(e: React.FormEvent) {
     e.preventDefault();
+    const ubicacion = [form.provincia, form.ciudad, form.zona].filter(Boolean).join(" › ");
     const msg = `Hola Pino Galant! Quiero una tasación de mi propiedad:
 
 🏠 *Tipo:* ${form.tipo}
-📍 *Zona:* ${form.zona}
+📍 *Ubicación:* ${ubicacion}
 📐 *Superficie:* ${form.superficie} m²
 🚪 *Ambientes:* ${form.ambientes}
 ✨ *Estado:* ${form.estado}
@@ -40,13 +91,15 @@ ${form.extras ? `📝 *Extras:* ${form.extras}\n` : ""}
   const inputStyle = {
     width: "100%", padding: "11px 14px", borderRadius: 10,
     border: "1.5px solid #e5e7eb", fontSize: 14, outline: "none",
-    boxSizing: "border-box" as const, fontFamily: "inherit",
+    boxSizing: "border-box" as const, fontFamily: "inherit", background: "#fff",
   };
   const btnStyle = (active: boolean) => ({
     padding: "10px 16px", borderRadius: 10, border: `1.5px solid ${active ? BRONCE : "#e5e7eb"}`,
     background: active ? BRONCE : "#fff", color: active ? "#fff" : "#555",
     cursor: "pointer", fontWeight: 700, fontSize: 13, textAlign: "left" as const,
   });
+
+  const canStep1 = form.tipo && form.provincia && form.ciudad && form.zona;
 
   if (sent) return (
     <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 20, padding: 40, textAlign: "center" }}>
@@ -90,24 +143,55 @@ ${form.extras ? `📝 *Extras:* ${form.extras}\n` : ""}
               </div>
             </div>
 
+            {/* PROVINCIA */}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 8 }}>
-                Zona / Barrio *
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 6 }}>
+                Provincia *
               </label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {ZONAS.map(z => (
-                  <button key={z} type="button" onClick={() => set("zona", z)} style={btnStyle(form.zona === z)}>
-                    {z}
-                  </button>
+              <select value={form.provincia} onChange={e => set("provincia", e.target.value)} style={inputStyle}>
+                <option value="">Seleccioná una provincia</option>
+                {Object.keys(UBICACION).map(p => (
+                  <option key={p} value={p}>{p}</option>
                 ))}
-              </div>
+              </select>
             </div>
 
-            <button type="button" disabled={!form.tipo || !form.zona}
+            {/* CIUDAD */}
+            {form.provincia && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 6 }}>
+                  Ciudad / Localidad *
+                </label>
+                <select value={form.ciudad} onChange={e => set("ciudad", e.target.value)} style={inputStyle}>
+                  <option value="">Seleccioná una localidad</option>
+                  {ciudades.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* ZONA / BARRIO */}
+            {form.ciudad && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#666", display: "block", marginBottom: 8 }}>
+                  Zona / Barrio *
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {zonas.map(z => (
+                    <button key={z} type="button" onClick={() => set("zona", z)} style={btnStyle(form.zona === z)}>
+                      {z}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button type="button" disabled={!canStep1}
               onClick={() => setStep(2)}
-              style={{ padding: "13px 0", borderRadius: 12, background: (!form.tipo || !form.zona) ? "#eee" : "#2D3134",
-                color: (!form.tipo || !form.zona) ? "#aaa" : "#fff", border: "none",
-                cursor: (!form.tipo || !form.zona) ? "not-allowed" : "pointer", fontWeight: 800, fontSize: 15 }}>
+              style={{ padding: "13px 0", borderRadius: 12, background: !canStep1 ? "#eee" : "#2D3134",
+                color: !canStep1 ? "#aaa" : "#fff", border: "none",
+                cursor: !canStep1 ? "not-allowed" : "pointer", fontWeight: 800, fontSize: 15 }}>
               Continuar →
             </button>
           </div>
@@ -203,7 +287,7 @@ ${form.extras ? `📝 *Extras:* ${form.extras}\n` : ""}
             <div style={{ background: "#F3EDE7", borderRadius: 12, padding: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: BRONCE, marginBottom: 6 }}>Resumen</div>
               <div style={{ fontSize: 13, color: "#555", lineHeight: 1.7 }}>
-                {form.tipo} · {form.zona} · {form.superficie} m² · {form.estado}
+                {form.tipo} · {form.provincia} › {form.ciudad} › {form.zona} · {form.superficie} m² · {form.estado}
               </div>
             </div>
 
