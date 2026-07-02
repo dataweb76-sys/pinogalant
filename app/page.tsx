@@ -117,7 +117,7 @@ export default async function HomePage() {
             <span>con asesoría real.</span>
           </h1>
           <p className="hero-subtitle">
-            Más de 10 años asesorando familias en la compra, venta y alquiler de propiedades en toda la región.
+            Asesorando familias en la compra, venta y alquiler de propiedades en toda la región.
           </p>
           <HeroSearch
             types={heroTypes}
