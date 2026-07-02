@@ -99,7 +99,6 @@ if (user?.email) {
         <VideoIntro />
         <SiteHeader user={headerUser} />
         {children}
-        <PWAInstall />
       </body>
     </html>
   );

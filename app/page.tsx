@@ -3,6 +3,7 @@ import HeroSearch from "@/app/components/HeroSearch.client";
 import OficinaModal from "@/app/components/OficinaModal.client";
 import PropertiesMap from "@/app/components/PropertiesMap.client";
 import WhatsAppCTA from "@/app/components/WhatsAppCTA.client";
+import PWAInstall from "@/app/components/PWAInstall.client";
 import {
   getAllTokkoProperties,
   tokkoPrice,
@@ -249,9 +250,12 @@ export default async function HomePage() {
             <p className="about-text">
               En Pino Galant, nos dedicamos a acompañar a cada cliente en uno de los momentos más importantes de su vida: la compra, venta o alquiler de una propiedad. Trabajamos con transparencia, profesionalismo y atención personalizada para que cada decisión sea la correcta.
             </p>
-            <Link href="/propiedades" className="about-cta">
-              Ver propiedades disponibles →
-            </Link>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <Link href="/propiedades" className="about-cta">
+                Ver propiedades disponibles →
+              </Link>
+              <PWAInstall />
+            </div>
           </div>
           <div className="about-stats">
             <div className="stat-card" style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
