@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import GallerySlider from "./GallerySlider";
 import WALeadButton from "@/app/components/WALeadButton.client";
-import MortgageCalc from "@/app/components/MortgageCalc.client";
 import PropiedadesSimilares from "@/app/components/PropiedadesSimilares";
 import ElBarrio from "@/app/components/ElBarrio.client";
 import VideoEmbed from "@/app/components/VideoEmbed.client";
