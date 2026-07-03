@@ -284,10 +284,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             </form>
           </div>
 
-          {/* Calculadora hipotecaria — solo en ventas */}
-          {op === "venta" && price && (
-            <MortgageCalc priceUSD={price.currency === "USD" ? price.amount : undefined} />
-          )}
 
           <Link href="/propiedades" className="btn" style={{ textAlign: "center" }}>
             ← Volver al listado
