@@ -32,13 +32,12 @@ export const metadata = {
 
 const TYPE_OPTIONS = [
   { id: "3",  label: "Casa" },
-  { id: "2",  label: "Departamento" },
+  { id: "2,13", label: "Departamento" },
   { id: "1",  label: "Terreno" },
   { id: "7",  label: "Local" },
   { id: "4",  label: "Quinta" },
   { id: "9",  label: "Campo" },
-  { id: "13", label: "Condo" },
-  { id: "19", label: "Rancho" },
+  { id: "19", label: "Chacra" },
 ];
 
 const BADGE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -121,7 +120,7 @@ export default async function PropiedadesPage({
 
   let props = all.filter((p) => {
     if (opFilter && tokkoOperation(p) !== opFilter) return false;
-    if (typeFilter && String(p.type?.id) !== typeFilter) return false;
+    if (typeFilter && !typeFilter.split(",").includes(String(p.type?.id))) return false;
     if (qFilter) {
       const hay = `${p.address} ${p.location?.full_location ?? ""} ${p.description ?? ""}`.toLowerCase();
       if (!hay.includes(qFilter)) return false;
