@@ -344,6 +344,15 @@ export default async function HomePage() {
           <span>© 2025 Pino Galant · Todos los derechos reservados</span>
           <span>Servicios inmobiliarios profesionales</span>
         </div>
+        <div style={{ background: "#1a1c1e", padding: "10px 0", textAlign: "center" }}>
+          <span style={{ fontSize: 12, color: "#666" }}>
+            Creada por{" "}
+            <a href="https://localweb.ar" target="_blank" rel="noopener noreferrer"
+              style={{ color: "#B48A73", fontWeight: 700, textDecoration: "none" }}>
+              localweb.ar
+            </a>
+          </span>
+        </div>
       </footer>
     </>
   );
