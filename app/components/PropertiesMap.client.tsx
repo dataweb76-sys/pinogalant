@@ -14,7 +14,7 @@ type MapPin = {
 };
 
 const TYPE_TRANSLATE: Record<string, string> = {
-  "Countryside": "Campo", "Ranch": "Rancho", "Condo": "Condominio",
+  "Countryside": "Campo", "Ranch": "Chacra", "Condo": "Departamento",
   "Bussiness Premises": "Local", "Business Premises": "Local",
   "House": "Casa", "Apartment": "Departamento", "Land": "Terreno",
   "Office": "Oficina", "Warehouse": "Depósito",
@@ -27,8 +27,7 @@ const TYPE_ICONS: Record<string, { emoji: string; color: string }> = {
   "Local":        { emoji: "🏪", color: "#E65100" },
   "Quinta":       { emoji: "🌳", color: "#558B2F" },
   "Campo":        { emoji: "🌾", color: "#c47f00" },
-  "Condominio":   { emoji: "🏘️", color: "#6A1B9A" },
-  "Rancho":       { emoji: "🏡", color: "#4E342E" },
+  "Chacra":       { emoji: "🌿", color: "#4E342E" },
   "Oficina":      { emoji: "🏛️", color: "#37474F" },
   "Depósito":     { emoji: "🏗️", color: "#546E7A" },
 };

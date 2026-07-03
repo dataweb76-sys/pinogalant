@@ -36,8 +36,8 @@ const TYPE_LABELS: Record<string, string> = {
   "1": "Terrenos",
   "7": "Local comercial",
   "8": "Fondo de comercio",
-  "13": "Condo",
-  "19": "Rancho",
+  "13": "Departamento",
+  "19": "Chacra",
 };
 
 export default async function HomePage() {

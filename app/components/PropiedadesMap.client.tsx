@@ -19,8 +19,7 @@ const TYPE_ICONS: Record<string, { emoji: string; color: string }> = {
   "Local":        { emoji: "🏪", color: "#E65100" },
   "Quinta":       { emoji: "🌳", color: "#558B2F" },
   "Campo":        { emoji: "🌾", color: "#c47f00" },
-  "Condo":        { emoji: "🏘️", color: "#6A1B9A" },
-  "Rancho":       { emoji: "🏡", color: "#4E342E" },
+  "Chacra":       { emoji: "🌿", color: "#4E342E" },
 };
 
 function getStyle(type?: string) {
