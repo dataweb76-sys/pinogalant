@@ -193,6 +193,61 @@ export async function updateClaimStatusAction(formData: FormData) {
   redirect(`/admin/alquileres/${contractId}?ok=Reclamo+actualizado&tab=reclamos`);
 }
 
+/* ── Agregar garante ── */
+export async function addGuarantorAction(formData: FormData) {
+  const { admin } = await requireAdmin();
+  const contractId = s(formData.get("contract_id"))!;
+
+  const { error } = await admin.from("rental_guarantors").insert({
+    contract_id:        contractId,
+    full_name:          s(formData.get("full_name"))!,
+    dni:                s(formData.get("dni")),
+    phone:              s(formData.get("phone")),
+    whatsapp:           s(formData.get("whatsapp")),
+    email:              s(formData.get("email")),
+    address:            s(formData.get("address")),
+    city:               s(formData.get("city")),
+    province:           s(formData.get("province")),
+    occupation:         s(formData.get("occupation")),
+    employer:           s(formData.get("employer")),
+    monthly_income:     n(formData.get("monthly_income")),
+    is_property_owner:  formData.get("is_property_owner") === "1",
+    property_address:   s(formData.get("property_address")),
+    property_value_ars: n(formData.get("property_value_ars")),
+    notes:              s(formData.get("notes")),
+  });
+
+  if (error) redirect(`/admin/alquileres/${contractId}?error=${encodeURIComponent(error.message)}&tab=garantes`);
+  redirect(`/admin/alquileres/${contractId}?ok=Garante+agregado&tab=garantes`);
+}
+
+/* ── Eliminar garante ── */
+export async function deleteGuarantorAction(formData: FormData) {
+  const { admin } = await requireAdmin();
+  const guarantorId = s(formData.get("guarantor_id"))!;
+  const contractId  = s(formData.get("contract_id"))!;
+  await admin.from("rental_guarantors").delete().eq("id", guarantorId);
+  redirect(`/admin/alquileres/${contractId}?ok=Garante+eliminado&tab=garantes`);
+}
+
+/* ── Actualizar datos inquilino en contrato ── */
+export async function updateTenantDataAction(formData: FormData) {
+  const { admin } = await requireAdmin();
+  const contractId = s(formData.get("contract_id"))!;
+  const { error } = await admin.from("rental_contracts").update({
+    tenant_dni:           s(formData.get("tenant_dni")),
+    tenant_cuit:          s(formData.get("tenant_cuit")),
+    tenant_occupation:    s(formData.get("tenant_occupation")),
+    tenant_employer:      s(formData.get("tenant_employer")),
+    tenant_monthly_income: n(formData.get("tenant_monthly_income")),
+    tenant_address:       s(formData.get("tenant_address")),
+    payment_method_pref:  s(formData.get("payment_method_pref")) ?? "transfer",
+    updated_at:           new Date().toISOString(),
+  }).eq("id", contractId);
+  if (error) redirect(`/admin/alquileres/${contractId}?error=${encodeURIComponent(error.message)}&tab=documentacion`);
+  redirect(`/admin/alquileres/${contractId}?ok=Datos+del+inquilino+guardados&tab=documentacion`);
+}
+
 /* ── Helper: generar cuotas ── */
 async function generatePayments(
   admin: any,

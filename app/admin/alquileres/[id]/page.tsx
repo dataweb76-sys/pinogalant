@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   sendContractAction, confirmContractAction,
   markPaymentPaidAction, updateRentAction, updateClaimStatusAction,
+  addGuarantorAction, deleteGuarantorAction, updateTenantDataAction,
 } from "../actions";
 import { daysUntil, formatARS, monthName } from "../date-utils";
 
@@ -55,17 +56,24 @@ export default async function ContratoDetailPage({
 
   if (!contract) redirect("/admin/alquileres?error=Contrato+no+encontrado");
 
-  const [propRes, tenantRes, paymentsRes, claimsRes] = await Promise.all([
+  const [propRes, rentalPropRes, tenantRes, paymentsRes, claimsRes, guarantorsRes] = await Promise.all([
     admin.from("properties").select("*").eq("id", contract.property_id).maybeSingle(),
+    contract.rental_property_id
+      ? admin.from("rental_properties").select("*").eq("id", contract.rental_property_id).maybeSingle()
+      : Promise.resolve({ data: null }),
     admin.from("profiles").select("full_name,email,phone,whatsapp,avatar_url").eq("id", contract.tenant_id).maybeSingle(),
     admin.from("rental_payments").select("*").eq("contract_id", params.id).order("period_year").order("period_month"),
     admin.from("rental_claims").select("*").eq("contract_id", params.id).order("created_at", { ascending: false }),
+    admin.from("rental_guarantors").select("*").eq("contract_id", params.id).order("created_at"),
   ]);
 
-  const prop    = propRes.data;
-  const tenant  = tenantRes.data;
-  const payments = paymentsRes.data ?? [];
-  const claims   = claimsRes.data ?? [];
+  const prop        = propRes.data;
+  const rentalProp  = rentalPropRes.data;
+  const tenant      = tenantRes.data;
+  const payments    = paymentsRes.data ?? [];
+  const claims      = claimsRes.data ?? [];
+  const guarantors  = guarantorsRes.data ?? [];
+  const displayProp = rentalProp ?? prop;
 
   const activeTab = searchParams?.tab ?? "resumen";
   const daysLeft  = daysUntil(contract.end_date);
@@ -96,7 +104,7 @@ export default async function ContratoDetailPage({
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#2D3134" }}>{contract.reference_code}</h1>
             <span style={{ background: st.bg, color: st.color, fontWeight: 700, fontSize: 12, padding: "4px 12px", borderRadius: 999 }}>{st.label}</span>
           </div>
-          <div style={{ fontSize: 13, color: "#888", marginTop: 4 }}>{prop?.title} · {prop?.city}</div>
+          <div style={{ fontSize: 13, color: "#888", marginTop: 4 }}>{displayProp?.title ?? prop?.title} · {displayProp?.city ?? prop?.city}</div>
         </div>
 
         {/* Acciones por estado */}
@@ -119,7 +127,12 @@ export default async function ContratoDetailPage({
           )}
           <Link href={`/admin/alquileres/${params.id}/contrato`}
             style={{ background: "#f4f4f5", color: "#555", textDecoration: "none", padding: "9px 16px", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>
-            📄 Ver contrato
+            📄 Contrato
+          </Link>
+          <Link href={`/api/admin/liquidacion/${params.id}?year=${new Date().getFullYear()}&month=${new Date().getMonth()+1}`}
+            target="_blank"
+            style={{ background: "#B48A73", color: "#fff", textDecoration: "none", padding: "9px 16px", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>
+            💼 Liquidacion
           </Link>
         </div>
       </div>
@@ -162,10 +175,12 @@ export default async function ContratoDetailPage({
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: "2px solid #eee", paddingBottom: 0 }}>
         {[
-          { id: "resumen",  label: "Resumen"  },
-          { id: "pagos",    label: `Pagos (${payments.length})` },
-          { id: "reclamos", label: `Reclamos (${claims.filter(c => c.status === "open").length} abiertos)` },
-          { id: "ajuste",   label: "Ajuste precio" },
+          { id: "resumen",       label: "Resumen"  },
+          { id: "pagos",         label: `Pagos (${payments.length})` },
+          { id: "garantes",      label: `Garantes (${guarantors.length})` },
+          { id: "documentacion", label: "Documentacion" },
+          { id: "reclamos",      label: `Reclamos (${claims.filter(c => c.status === "open").length})` },
+          { id: "ajuste",        label: "Ajuste precio" },
         ].map(t => (
           <Link key={t.id} href={`/admin/alquileres/${params.id}?tab=${t.id}`}
             style={{
@@ -287,26 +302,191 @@ export default async function ContratoDetailPage({
                         )}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
-                        {p.status === "pending" && (
-                          <form action={markPaymentPaidAction} style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                            <input type="hidden" name="payment_id" value={p.id} />
-                            <input type="hidden" name="contract_id" value={params.id} />
-                            <select name="method" style={{ fontSize: 12, padding: "4px 6px", borderRadius: 6, border: "1px solid #ddd" }}>
-                              <option value="office">En oficina</option>
-                              <option value="transfer">Transferencia</option>
-                              <option value="online">Online</option>
-                            </select>
-                            <button type="submit" style={{ background: "#15803d", color: "#fff", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                              ✅ Pagado
-                            </button>
-                          </form>
-                        )}
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                          {p.status === "pending" && (
+                            <form action={markPaymentPaidAction} style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                              <input type="hidden" name="payment_id" value={p.id} />
+                              <input type="hidden" name="contract_id" value={params.id} />
+                              <select name="method" style={{ fontSize: 12, padding: "4px 6px", borderRadius: 6, border: "1px solid #ddd" }}>
+                                <option value="office">En oficina</option>
+                                <option value="transfer">Transferencia</option>
+                                <option value="online">Online</option>
+                                <option value="mercadopago">MercadoPago</option>
+                              </select>
+                              <button type="submit" style={{ background: "#15803d", color: "#fff", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                                Pago
+                              </button>
+                            </form>
+                          )}
+                          {p.status === "paid" && (
+                            <a href={`/api/admin/recibo/${p.id}`} target="_blank"
+                              style={{ background: "#2D3134", color: "#fff", textDecoration: "none", padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}>
+                              Recibo PDF
+                            </a>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: GARANTES */}
+      {activeTab === "garantes" && (
+        <div>
+          {/* Formulario agregar garante */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #eee", padding: 20, marginBottom: 16 }}>
+            <h3 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 800, color: "#2D3134" }}>+ Agregar garante</h3>
+            <form action={addGuarantorAction}>
+              <input type="hidden" name="contract_id" value={params.id} />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 12 }}>
+                {[
+                  { name: "full_name",  label: "Nombre completo *", type: "text",   required: true },
+                  { name: "dni",        label: "DNI",               type: "text"  },
+                  { name: "phone",      label: "Telefono",          type: "text"  },
+                  { name: "whatsapp",   label: "WhatsApp",          type: "text"  },
+                  { name: "email",      label: "Email",             type: "email" },
+                  { name: "address",    label: "Domicilio",         type: "text"  },
+                  { name: "city",       label: "Ciudad",            type: "text"  },
+                  { name: "occupation", label: "Ocupacion",         type: "text"  },
+                  { name: "employer",   label: "Empleador",         type: "text"  },
+                ].map(f => (
+                  <div key={f.name}>
+                    <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>{f.label}</label>
+                    <input className="input" type={f.type} name={f.name} required={f.required} style={{ fontSize: 13 }} />
+                  </div>
+                ))}
+                <div>
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>Ingresos mensuales (ARS)</label>
+                  <input className="input" type="number" name="monthly_income" step="100" style={{ fontSize: 13 }} />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, cursor: "pointer" }}>
+                  <input type="checkbox" name="is_property_owner" value="1" style={{ accentColor: "#2D3134" }} />
+                  Es propietario de inmueble (garantia real)
+                </label>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>Domicilio del bien (si es propietario)</label>
+                  <input className="input" type="text" name="property_address" style={{ fontSize: 13 }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>Valor aproximado del bien (ARS)</label>
+                  <input className="input" type="number" name="property_value_ars" step="10000" style={{ fontSize: 13 }} />
+                </div>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>Notas</label>
+                <textarea className="input" name="notes" rows={2} style={{ resize: "none", fontSize: 13 }} />
+              </div>
+              <button type="submit" style={{ background: "#2D3134", color: "#fff", border: "none", borderRadius: 10, padding: "10px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                Agregar garante
+              </button>
+            </form>
+          </div>
+
+          {/* Lista de garantes */}
+          {guarantors.length === 0 ? (
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #eee", padding: 32, textAlign: "center", color: "#aaa" }}>
+              Sin garantes registrados aun.
+            </div>
+          ) : guarantors.map((g: any) => (
+            <div key={g.id} style={{ background: "#fff", borderRadius: 14, border: "1px solid #eee", padding: 18, marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "#2D3134", marginBottom: 4 }}>{g.full_name}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 6, fontSize: 13, color: "#555" }}>
+                    {g.dni      && <span><strong>DNI:</strong> {g.dni}</span>}
+                    {g.phone    && <span><strong>Tel:</strong> {g.phone}</span>}
+                    {g.whatsapp && <span><strong>WA:</strong> {g.whatsapp}</span>}
+                    {g.email    && <span><strong>Email:</strong> {g.email}</span>}
+                    {g.address  && <span><strong>Dom:</strong> {g.address}, {g.city}</span>}
+                    {g.occupation && <span><strong>Ocup:</strong> {g.occupation}</span>}
+                    {g.employer && <span><strong>Empleador:</strong> {g.employer}</span>}
+                    {g.monthly_income && <span><strong>Ingresos:</strong> ${Number(g.monthly_income).toLocaleString("es-AR")}</span>}
+                  </div>
+                  {g.is_property_owner && (
+                    <div style={{ marginTop: 8, background: "#f0fdf4", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#15803d", fontWeight: 700 }}>
+                      Propietario de: {g.property_address ?? "—"}{g.property_value_ars ? ` (${formatARS(g.property_value_ars)})` : ""}
+                    </div>
+                  )}
+                  {g.notes && <div style={{ marginTop: 8, fontSize: 12, color: "#888" }}>Nota: {g.notes}</div>}
+                </div>
+                <form action={deleteGuarantorAction}>
+                  <input type="hidden" name="guarantor_id" value={g.id} />
+                  <input type="hidden" name="contract_id" value={params.id} />
+                  <button type="submit" style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                    onClick={() => {}} >
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* TAB: DOCUMENTACION */}
+      {activeTab === "documentacion" && (
+        <div>
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #eee", padding: 24, marginBottom: 16 }}>
+            <h3 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 800, color: "#2D3134" }}>Datos del inquilino para el contrato</h3>
+            <form action={updateTenantDataAction} style={{ display: "grid", gap: 14 }}>
+              <input type="hidden" name="contract_id" value={params.id} />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
+                {[
+                  { name: "tenant_dni",      label: "DNI",          type: "text",   val: contract.tenant_dni },
+                  { name: "tenant_cuit",     label: "CUIT/CUIL",    type: "text",   val: contract.tenant_cuit },
+                  { name: "tenant_occupation",label: "Ocupacion",   type: "text",   val: contract.tenant_occupation },
+                  { name: "tenant_employer", label: "Empleador",    type: "text",   val: contract.tenant_employer },
+                  { name: "tenant_address",  label: "Domicilio actual", type: "text", val: contract.tenant_address },
+                ].map(f => (
+                  <div key={f.name}>
+                    <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>{f.label}</label>
+                    <input className="input" type={f.type} name={f.name} defaultValue={f.val ?? ""} />
+                  </div>
+                ))}
+                <div>
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>Ingresos mensuales (ARS)</label>
+                  <input className="input" type="number" name="tenant_monthly_income" defaultValue={contract.tenant_monthly_income ?? ""} step="100" />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#777", marginBottom: 4, textTransform: "uppercase" }}>Forma de pago preferida</label>
+                <select className="input" name="payment_method_pref" defaultValue={contract.payment_method_pref ?? "transfer"}>
+                  <option value="transfer">Transferencia bancaria</option>
+                  <option value="office">Pago en oficina</option>
+                  <option value="online">Online</option>
+                  <option value="mercadopago">MercadoPago</option>
+                </select>
+              </div>
+              <button type="submit" style={{ background: "#2D3134", color: "#fff", border: "none", borderRadius: 10, padding: "11px 0", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
+                Guardar datos
+              </button>
+            </form>
+          </div>
+
+          {/* Info visual del inquilino guardada */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #eee", padding: 20 }}>
+            <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 800, color: "#2D3134" }}>Resumen datos del inquilino</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 10, fontSize: 13 }}>
+              <div><strong>Nombre:</strong> {tenant?.full_name ?? "—"}</div>
+              <div><strong>Email:</strong> {tenant?.email ?? "—"}</div>
+              <div><strong>Telefono:</strong> {tenant?.phone ?? "—"}</div>
+              <div><strong>WhatsApp:</strong> {tenant?.whatsapp ?? "—"}</div>
+              {contract.tenant_dni && <div><strong>DNI:</strong> {contract.tenant_dni}</div>}
+              {contract.tenant_cuit && <div><strong>CUIT:</strong> {contract.tenant_cuit}</div>}
+              {contract.tenant_occupation && <div><strong>Ocupacion:</strong> {contract.tenant_occupation}</div>}
+              {contract.tenant_employer && <div><strong>Empleador:</strong> {contract.tenant_employer}</div>}
+              {contract.tenant_address && <div><strong>Domicilio:</strong> {contract.tenant_address}</div>}
+              {contract.tenant_monthly_income && <div><strong>Ingresos:</strong> ${Number(contract.tenant_monthly_income).toLocaleString("es-AR")}</div>}
+            </div>
           </div>
         </div>
       )}

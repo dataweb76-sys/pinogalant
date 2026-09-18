@@ -83,6 +83,7 @@ export default async function AdminAlquileresPage({
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
           <Link href="/admin" style={{ background: "#f4f4f5", color: "#555", textDecoration: "none", padding: "8px 16px", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>← Panel</Link>
+          <Link href="/admin/alquileres/propiedades" style={{ background: "#f4f4f5", color: "#555", textDecoration: "none", padding: "8px 16px", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>Propiedades</Link>
           <Link href="/admin/alquileres/nuevo" style={{ background: "#2D3134", color: "#fff", textDecoration: "none", padding: "8px 18px", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>+ Nuevo contrato</Link>
         </div>
       </div>
