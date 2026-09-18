@@ -98,6 +98,7 @@ export default async function AdminDashboard() {
             {[
               { href: "/admin/propiedades", icon: "🏠", title: "Propiedades", desc: `${totalProps} en Tokko · agentes y consultas` },
               { href: "/admin/consultas",   icon: "📩", title: "Consultas",   desc: `${totalConsultas} total · ${consultasHoy} hoy`, alert: consultasHoy > 0 },
+              { href: "/admin/alquileres",  icon: "🔑", title: "Alquileres",  desc: "Contratos, inquilinos y cobros" },
               { href: "/admin/agentes",     icon: "🧑‍💼", title: "Agentes",    desc: "Asignación de propiedades" },
               { href: "/admin/auditoria",   icon: "📋", title: "Auditoría",  desc: "Actividad reciente del sistema" },
             ].map((c) => (
